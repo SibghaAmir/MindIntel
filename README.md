@@ -6,8 +6,9 @@ so the whole app is navigable and interactive on its own.
 
 ## Tech stack
 
-- Expo SDK 57 (managed workflow, New Architecture enabled)
-- React Native 0.86 + React 19
+- Expo SDK 54 (managed workflow, New Architecture enabled) — pinned to match the
+  version currently published to Expo Go on the App Store / Play Store
+- React Native 0.81 + React 19.1
 - TypeScript (strict mode)
 - Expo Router (file-based navigation, typed routes)
 - React Native Reanimated 4 + `react-native-worklets`
@@ -15,6 +16,11 @@ so the whole app is navigable and interactive on its own.
 - Expo Linear Gradient / Expo Haptics / Expo Blur
 - Zustand for local game/case/settings state
 - `@expo/vector-icons` (Ionicons)
+
+All dependency versions are pinned exactly (no `^` / `~` ranges) in `package.json`
+so a fresh `npm install` always resolves to the exact tested set. A `.npmrc` with
+`legacy-peer-deps=true` is included so plain `npm install` works without extra flags
+(needed because of a peer-dependency conflict in `expo-router`'s web tooling).
 
 ## Getting started
 
@@ -24,7 +30,8 @@ npx expo start
 ```
 
 Then press `i` for iOS simulator, `a` for Android emulator, or scan the QR code with
-Expo Go on a physical device. `npm run web` also works for a quick browser preview.
+**Expo Go** on a physical device — install Expo Go from the App Store / Play Store,
+it will match this project's SDK 54. `npm run web` also works for a quick browser preview.
 
 Run `npm run typecheck` to type-check the whole project.
 
@@ -91,8 +98,9 @@ Dark forensic-investigation palette, exactly as specified:
 
 - `npx tsc --noEmit` passes clean (strict mode)
 - `npx expo export --platform web` bundles the entire route tree successfully
-  (1441 modules, no resolution errors) — confirms every screen, component, and
-  store import resolves correctly
+  (1287 modules, no resolution errors) — confirms every screen, component, and
+  store import resolves correctly, on the exact pinned SDK 54 dependency set
+- Clean `npm install` from a fresh `node_modules` resolves without errors
 
 ## Phase 2 (not built here, by instruction)
 
