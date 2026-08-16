@@ -48,9 +48,10 @@ export default function InvestigationScreen() {
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
+  const isThinking = status === 'thinking';
 
   useEffect(() => {
-    if (status === 'concluding') {
+    if (status === 'guessing') {
       router.replace('/conclusion');
     }
   }, [status]);
@@ -82,16 +83,26 @@ export default function InvestigationScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <InvestigationCard
-          status="ANALYZING"
-          message="I'm narrowing down the possibilities."
-          coreState={coreStateForConfidence(confidence)}
+          status={isThinking ? 'THINKING' : 'ANALYZING'}
+          message={
+            isThinking
+              ? "Processing your answer..."
+              : "I'm narrowing down the possibilities."
+          }
+          coreState={isThinking ? 'thinking' : coreStateForConfidence(confidence)}
         />
 
         <QuestionCard question={currentQuestion} questionKey={questionNumber} />
 
         <View style={styles.answerGrid}>
           {ANSWER_LABELS.map((a) => (
-            <AnswerButton key={a.value} value={a.value} label={a.label} onPress={handleAnswer} />
+            <AnswerButton
+              key={a.value}
+              value={a.value}
+              label={a.label}
+              onPress={handleAnswer}
+              disabled={isThinking}
+            />
           ))}
         </View>
 

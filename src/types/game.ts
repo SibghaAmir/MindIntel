@@ -19,10 +19,11 @@ export type AnswerValue = 'yes' | 'no' | 'maybe' | 'unknown';
 
 export type GameStatus =
   | 'idle'
-  | 'in_progress'
-  | 'concluding'
-  | 'ai_win'
-  | 'player_win';
+  | 'playing'
+  | 'thinking'
+  | 'guessing'
+  | 'won'
+  | 'lost';
 
 export interface CategoryOption {
   id: CaseCategoryId;
@@ -66,13 +67,14 @@ export interface GameState {
   caseNumber: number;
   category: CaseCategoryId | null;
   mode: InvestigationMode;
-  currentQuestion: string;
   questionNumber: number;
   maxQuestions: number;
+  questions: string[];
   answers: QAEntry[];
-  confidence: number;
   candidates: string[];
+  confidence: number;
   status: GameStatus;
+  currentQuestion: string;
   guess: CandidateGuess | null;
   snapshot: InvestigationSnapshot;
 }

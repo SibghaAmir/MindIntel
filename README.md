@@ -22,7 +22,28 @@ so a fresh `npm install` always resolves to the exact tested set. A `.npmrc` wit
 `legacy-peer-deps=true` is included so plain `npm install` works without extra flags
 (needed because of a peer-dependency conflict in `expo-router`'s web tooling).
 
-## Getting started
+## Phase 2 — local mock game engine
+
+The full game loop now runs end-to-end on-device, no backend required:
+
+- **Game engine** (`src/store/gameStore.ts`): typed state machine with statuses
+  `idle → playing → thinking → guessing → won / lost`. Each answer briefly enters
+  `thinking` (so the AI core animates) before either the next question or the
+  conclusion appears.
+- **Category-specific questions** (`src/data/mockQuestionsByCategory.ts`): 20
+  hand-authored, logically-ordered questions per category (people, characters,
+  animals, places, objects, games, brands, anything) — broad to specific, not
+  randomly generated.
+- **Mode-aware conclusions**: 20-question games can end early once the AI's
+  mock confidence is high enough; 10-question rapid games wrap up faster. Both
+  always respect their hard max.
+- **Haptics** (`expo-haptics`): light impact on every answer tap, success
+  notification when a guess is confirmed correct or when the player wins.
+- **Persistence** (`src/store/casesStore.ts`): games played, AI wins, player
+  wins, best score, and case history now persist across app restarts via
+  `AsyncStorage` (using Zustand's `persist` middleware) — still no database.
+
+
 
 ```bash
 npm install
@@ -91,8 +112,8 @@ Dark forensic-investigation palette, exactly as specified:
 - "AI confidence", "candidates remaining", and category breakdown are generated
   by a formula that narrows as more questions are answered (`src/data/mockInvestigation.ts`)
 - The AI's final guess is always the same mock candidate with 93% confidence
-- Case history starts pre-seeded with 6 example cases; new cases append locally
-  (nothing persists between app restarts — there's no backend or AsyncStorage wiring yet)
+- Case history starts pre-seeded with 6 example cases on first launch; new
+  cases append and persist locally via AsyncStorage from then on
 
 ## Verified
 

@@ -13,7 +13,6 @@ export default function ConclusionScreen() {
   const guess = useGameStore((s) => s.guess);
   const confirmGuessCorrect = useGameStore((s) => s.confirmGuessCorrect);
   const rejectGuess = useGameStore((s) => s.rejectGuess);
-  const status = useGameStore((s) => s.status);
 
   const handleCorrect = () => {
     confirmGuessCorrect();
@@ -22,7 +21,8 @@ export default function ConclusionScreen() {
 
   const handleIncorrect = () => {
     rejectGuess();
-    if (status === 'in_progress') {
+    const latestStatus = useGameStore.getState().status;
+    if (latestStatus === 'playing') {
       router.replace('/investigation');
     } else {
       router.replace('/result');

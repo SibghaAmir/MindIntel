@@ -14,7 +14,7 @@ export default function ResultScreen() {
     useGameStore();
   const addCase = useCasesStore((s) => s.addCase);
 
-  const isAiWin = status === 'ai_win';
+  const isAiWin = status === 'won';
   const [subjectInput, setSubjectInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
