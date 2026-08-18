@@ -3,7 +3,9 @@ from typing import Optional
 from uuid import UUID
 from app.models.game_state import games_db
 from app.schemas.game import GameState, CreateGameRequest, AnswerRequest, ConfirmGuessRequest
-from app.game.mock_data import MOCK_QUESTIONS, MOCK_CANDIDATES, MOCK_FINAL_GUESS
+from app.ai.question_chain import generate_next_question
+from app.ai.guess_chain import generate_guess
+from app.ai.candidate_service import generate_candidates
 
 def create_game(request: CreateGameRequest) -> GameState:
     game_id = uuid.uuid4()
@@ -15,8 +17,13 @@ def create_game(request: CreateGameRequest) -> GameState:
         mode=request.mode,
         max_questions=max_questions,
         status="playing",
-        current_question=MOCK_QUESTIONS[0]
+        current_question=None
     )
+    
+    # Generate the very first question
+    question_response = generate_next_question(initial_state)
+    initial_state.current_question = question_response.question
+    initial_state.confidence = question_response.confidence
     
     games_db[game_id] = initial_state
     return initial_state
@@ -36,24 +43,25 @@ def process_answer(game_id: UUID, request: AnswerRequest) -> Optional[GameState]
     game.questions.append(game.current_question)
     game.question_number += 1
     
-    # Mock some narrowing down
-    game.confidence += 5
-    if game.confidence > 100:
-        game.confidence = 100
-        
-    # Just show a random subset of candidates for mock
-    candidates_count = max(1, 10 - game.question_number)
-    game.candidates = MOCK_CANDIDATES[:candidates_count]
-    
+    # Check if we should guess
     if game.question_number >= game.max_questions or game.confidence > 90:
+        # Time to guess
+        guess_response = generate_guess(game)
         game.status = "guessing"
-        game.guess = MOCK_FINAL_GUESS
+        game.guess = guess_response.guess
+        game.confidence = guess_response.confidence
         game.current_question = None
+        # Could potentially store reason if we had a field for it, but for now we just guess
     else:
-        # Get next mock question
-        next_index = game.question_number % len(MOCK_QUESTIONS)
-        game.current_question = MOCK_QUESTIONS[next_index]
-        game.status = "playing" # actually it should probably transition from thinking back to playing on frontend, but backend state can just be playing
+        # Generate next question
+        question_response = generate_next_question(game)
+        game.current_question = question_response.question
+        game.confidence = question_response.confidence
+        game.status = "playing"
+        
+        # Generate candidates async in real world, but sync here
+        candidates = generate_candidates(game)
+        game.candidates = candidates
         
     games_db[game_id] = game
     return game

@@ -3,3 +3,6 @@ uvicorn==0.27.1
 pydantic
 python-dotenv==1.0.1
 pydantic-settings
+langchain
+langchain-openai
+openai
