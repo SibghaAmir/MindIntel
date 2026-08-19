@@ -15,6 +15,7 @@ class GameState(BaseModel):
     candidates: List[str] = Field(default_factory=list)
     current_question: Optional[str] = None
     guess: Optional[str] = None
+    reason: Optional[str] = None
 
 class CreateGameRequest(BaseModel):
     category: str
