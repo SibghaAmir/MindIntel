@@ -7,36 +7,44 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton } from '@/src/components';
 import { colors, gradients, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
-import { EVIDENCE_POINTS } from '@/src/data/mockInvestigation';
 
 export default function ConclusionScreen() {
   const guess = useGameStore((s) => s.guess);
+  const isAnalyzing = useGameStore((s) => s.isAnalyzing);
+  const apiError = useGameStore((s) => s.apiError);
   const confirmGuessCorrect = useGameStore((s) => s.confirmGuessCorrect);
   const rejectGuess = useGameStore((s) => s.rejectGuess);
 
   const handleCorrect = () => {
-    confirmGuessCorrect();
-    router.replace('/result');
+    confirmGuessCorrect().then(() => {
+        router.replace('/result');
+    });
   };
 
   const handleIncorrect = () => {
-    rejectGuess();
-    const latestStatus = useGameStore.getState().status;
-    if (latestStatus === 'playing') {
-      router.replace('/investigation');
-    } else {
-      router.replace('/result');
-    }
+    rejectGuess().then(() => {
+        const latestStatus = useGameStore.getState().status;
+        if (latestStatus === 'playing') {
+          router.replace('/investigation');
+        } else {
+          router.replace('/result');
+        }
+    });
   };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {apiError && (
+          <View style={{ backgroundColor: colors.warning, padding: spacing.sm, borderRadius: radius.sm, marginBottom: spacing.sm }}>
+            <Text style={{ color: colors.white, ...typography.caption }}>{apiError}</Text>
+          </View>
+        )}
         <Text style={typography.eyebrow}>Case Conclusion</Text>
         <Text style={styles.headline}>I believe I&apos;ve identified the subject.</Text>
 
         <View style={styles.coreWrap}>
-          <AIInvestigationCore state="highConfidence" size={140} />
+          <AIInvestigationCore state={isAnalyzing ? 'analyzing' : 'highConfidence'} size={140} />
         </View>
 
         <LinearGradient colors={gradients.hero} style={styles.candidateCard}>
@@ -47,17 +55,17 @@ export default function ConclusionScreen() {
           </View>
         </LinearGradient>
 
-        <GlassCard style={styles.evidenceCard}>
-          <Text style={typography.eyebrow}>Evidence Supporting This Conclusion</Text>
-          <View style={styles.evidenceList}>
-            {EVIDENCE_POINTS.map((point) => (
-              <View key={point} style={styles.evidenceRow}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-                <Text style={styles.evidenceText}>{point}</Text>
-              </View>
-            ))}
-          </View>
-        </GlassCard>
+        {guess?.reason && (
+          <GlassCard style={styles.evidenceCard}>
+            <Text style={typography.eyebrow}>AI Explanation</Text>
+            <View style={styles.evidenceList}>
+                <View style={styles.evidenceRow}>
+                  <Ionicons name="information-circle" size={18} color={colors.glowBlue} />
+                  <Text style={styles.evidenceText}>{guess.reason}</Text>
+                </View>
+            </View>
+          </GlassCard>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>

@@ -6,169 +6,143 @@ import type {
   GameState,
   InvestigationMode,
 } from '@/src/types/game';
-import { getQuestionAt } from '@/src/data/mockQuestionsByCategory';
-import { buildMockSnapshot, pickMockGuess } from '@/src/data/mockInvestigation';
-import { MODE_OPTIONS } from '@/src/data/mockOptions';
+import { gameApi } from '@/src/services/gameApi';
 
-/**
- * Local mock game engine (Phase 2). Drives an entire Kasoti game — category
- * selection through to a final AI win / player win — with no backend.
- * Every "AI" decision here is a deterministic simulation, not real inference.
- */
 interface GameStore extends GameState {
   selectedCategory: CaseCategoryId | null;
   selectedMode: InvestigationMode;
+  isAnalyzing: boolean;
+  apiError: string | null;
   setCategory: (category: CaseCategoryId) => void;
   setMode: (mode: InvestigationMode) => void;
-  startInvestigation: () => void;
-  answerQuestion: (answer: AnswerValue) => void;
-  confirmGuessCorrect: () => void;
-  rejectGuess: () => void;
+  startInvestigation: () => Promise<void>;
+  answerQuestion: (answer: AnswerValue) => Promise<void>;
+  confirmGuessCorrect: () => Promise<void>;
+  rejectGuess: () => Promise<void>;
   submitPlayerAnswer: (subject: string) => void;
   resetGame: () => void;
+  clearError: () => void;
 }
 
 let caseCounter = 26;
 
 function initialState(): GameState {
-  const category: CaseCategoryId = 'anything';
   return {
-    gameId: `game-${Date.now()}`,
+    gameId: '',
     caseNumber: caseCounter,
     category: null,
     mode: 'standard',
     questionNumber: 1,
     maxQuestions: 20,
-    questions: [getQuestionAt(category, 0)],
+    questions: [],
     answers: [],
     candidates: [],
-    confidence: 12,
+    confidence: 0,
     status: 'idle',
-    currentQuestion: getQuestionAt(category, 0),
+    currentQuestion: '',
     guess: null,
-    snapshot: buildMockSnapshot(0, 20),
+    snapshot: {
+      aiConfidence: 0,
+      candidatesRemaining: 1000,
+      topPossibilities: [],
+      categoryBreakdown: [],
+    },
   };
-}
-
-/**
- * A game concludes (moves to "guessing") once the AI's mock confidence
- * crosses a high-confidence threshold, once a soft cap on questions asked is
- * reached, or once the mode's max question count is hit — whichever comes
- * first. This keeps 10-question games snappy and lets 20-question games end
- * early on a confident guess.
- */
-function shouldConclude(answeredCount: number, maxQuestions: number, aiConfidence: number) {
-  const softCap = Math.min(maxQuestions, Math.max(6, Math.round(maxQuestions * 0.55)));
-  return aiConfidence >= 90 || answeredCount >= maxQuestions || answeredCount >= softCap;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
   ...initialState(),
   selectedCategory: null,
   selectedMode: 'standard',
+  isAnalyzing: false,
+  apiError: null,
 
   setCategory: (category) => set({ selectedCategory: category }),
 
   setMode: (mode) => set({ selectedMode: mode }),
 
-  startInvestigation: () => {
+  clearError: () => set({ apiError: null }),
+
+  startInvestigation: async () => {
     const { selectedCategory, selectedMode } = get();
     const category: CaseCategoryId = selectedCategory ?? 'anything';
-    const modeConfig = MODE_OPTIONS.find((m) => m.id === selectedMode) ?? MODE_OPTIONS[0];
     caseCounter += 1;
 
-    set({
-      ...initialState(),
-      gameId: `game-${Date.now()}`,
-      caseNumber: caseCounter,
-      category,
-      mode: selectedMode,
-      maxQuestions: modeConfig.questionCount,
-      status: 'playing',
-      questions: [getQuestionAt(category, 0)],
-      currentQuestion: getQuestionAt(category, 0),
-      snapshot: buildMockSnapshot(0, modeConfig.questionCount),
-      candidates: buildMockSnapshot(0, modeConfig.questionCount).topPossibilities,
-    });
+    set({ isAnalyzing: true, apiError: null, status: 'thinking' });
+
+    try {
+      const newState = await gameApi.createGame(category, selectedMode);
+      set({
+        ...newState,
+        caseNumber: caseCounter,
+        isAnalyzing: false,
+      });
+    } catch (error: any) {
+      set({ apiError: error.message || 'Failed to start game.', isAnalyzing: false, status: 'idle' });
+    }
   },
 
-  answerQuestion: (answer) => {
+  answerQuestion: async (answer) => {
     const state = get();
-    if (state.status !== 'playing') return;
+    if (state.status !== 'playing' || !state.gameId) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
 
-    const category = state.category ?? 'anything';
+    // Optimistic UI update for thinking state
     const nextAnswers = [
       ...state.answers,
       { question: state.currentQuestion, answer },
     ];
+    set({ status: 'thinking', answers: nextAnswers, isAnalyzing: true, apiError: null });
 
-    // Show a brief "thinking" state so the AI core animates before either
-    // the next question or the conclusion appears — mirrors an AI actually
-    // processing the answer, even though the outcome is already decided.
-    set({ status: 'thinking', answers: nextAnswers });
-
-    setTimeout(() => {
-      // Bail out if the game was reset/left while thinking.
+    try {
+      const newState = await gameApi.submitAnswer(state.gameId, answer);
+      // Bail out if the game was reset while analyzing
       if (get().gameId !== state.gameId) return;
 
-      const snapshot = buildMockSnapshot(nextAnswers.length, state.maxQuestions);
-      const concluding = shouldConclude(nextAnswers.length, state.maxQuestions, snapshot.aiConfidence);
-
-      if (concluding) {
-        const guess = pickMockGuess();
-        set({
-          questionNumber: nextAnswers.length,
-          confidence: snapshot.aiConfidence,
-          snapshot,
-          candidates: snapshot.topPossibilities,
-          status: 'guessing',
-          guess,
-        });
-        return;
-      }
-
-      const nextQuestion = getQuestionAt(category, nextAnswers.length);
       set({
-        questions: [...state.questions, nextQuestion],
-        questionNumber: nextAnswers.length + 1,
-        confidence: snapshot.aiConfidence,
-        snapshot,
-        candidates: snapshot.topPossibilities,
-        currentQuestion: nextQuestion,
-        status: 'playing',
+        ...newState,
+        caseNumber: state.caseNumber,
+        isAnalyzing: false,
       });
-    }, 650);
-  },
-
-  confirmGuessCorrect: () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    set({ status: 'won' });
-  },
-
-  rejectGuess: () => {
-    const state = get();
-    if (state.questionNumber >= state.maxQuestions) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      set({ status: 'lost' });
-      return;
+    } catch (error: any) {
+      set({ apiError: error.message || 'Failed to submit answer.', isAnalyzing: false, status: 'playing' });
     }
+  },
 
-    const category = state.category ?? 'anything';
-    const nextQuestion = getQuestionAt(category, state.answers.length);
-    set({
-      status: 'playing',
-      questions: [...state.questions, nextQuestion],
-      currentQuestion: nextQuestion,
-      guess: null,
-    });
+  confirmGuessCorrect: async () => {
+    const state = get();
+    if (!state.gameId) return;
+
+    set({ isAnalyzing: true, apiError: null });
+    try {
+      const newState = await gameApi.confirmGuess(state.gameId, true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
+    } catch (error: any) {
+      set({ apiError: error.message || 'Error confirming guess.', isAnalyzing: false });
+    }
+  },
+
+  rejectGuess: async () => {
+    const state = get();
+    if (!state.gameId) return;
+
+    set({ isAnalyzing: true, apiError: null });
+    try {
+      const newState = await gameApi.confirmGuess(state.gameId, false);
+      if (newState.status === 'lost') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
+    } catch (error: any) {
+      set({ apiError: error.message || 'Error rejecting guess.', isAnalyzing: false });
+    }
   },
 
   submitPlayerAnswer: (_subject) => {
-    // Phase 2: still UI + local-state only; casesStore records the subject.
     set({ status: 'lost' });
   },
 
-  resetGame: () => set({ ...initialState() }),
+  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null }),
 }));

@@ -48,6 +48,7 @@ export interface QAEntry {
 export interface CandidateGuess {
   name: string;
   confidence: number;
+  reason?: string;
 }
 
 export interface CategoryBreakdownItem {

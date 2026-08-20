@@ -44,17 +44,19 @@ export default function InvestigationScreen() {
     confidence,
     snapshot,
     status,
+    isAnalyzing,
+    apiError,
     answerQuestion,
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
-  const isThinking = status === 'thinking';
+  const isThinking = isAnalyzing; // We use isAnalyzing for the loading state
 
   useEffect(() => {
-    if (status === 'guessing') {
+    if (status === 'guessing' && !isAnalyzing) {
       router.replace('/conclusion');
     }
-  }, [status]);
+  }, [status, isAnalyzing]);
 
   const handleAnswer = (value: AnswerValue) => {
     answerQuestion(value);
@@ -82,11 +84,16 @@ export default function InvestigationScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {apiError && (
+          <View style={{ backgroundColor: colors.warning, padding: spacing.sm, borderRadius: radius.sm, marginBottom: spacing.sm }}>
+            <Text style={{ color: colors.white, ...typography.caption }}>{apiError}</Text>
+          </View>
+        )}
         <InvestigationCard
-          status={isThinking ? 'THINKING' : 'ANALYZING'}
+          status={isThinking ? 'AI IS ANALYZING...' : 'ANALYZING'}
           message={
             isThinking
-              ? "Processing your answer..."
+              ? "Communicating with backend..."
               : "I'm narrowing down the possibilities."
           }
           coreState={isThinking ? 'thinking' : coreStateForConfidence(confidence)}
