@@ -14,3 +14,6 @@ class GuessResponse(BaseModel):
 
 class CandidatesResponse(BaseModel):
     candidates: List[str] = Field(description="List of 3 to 5 candidate names based on current answers")
+
+class ExtractedAttributes(BaseModel):
+    attributes: dict[str, str | bool | int | float] = Field(description="A dictionary of confirmed attributes based on the Q&A history (e.g., {'is_real': True, 'gender': 'male'}). Only include definitively confirmed facts.")

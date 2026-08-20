@@ -25,9 +25,12 @@ def generate_next_question(game: GameState) -> QuestionResponse:
     chain = prompt | structured_llm
     
     history_text = format_history(game)
+    candidates_text = ", ".join(game.candidates) if game.candidates else "No specific candidates identified yet."
+    
     response = chain.invoke({
         "category": game.category,
-        "history": history_text
+        "history": history_text,
+        "candidates": candidates_text
     })
     
     return response

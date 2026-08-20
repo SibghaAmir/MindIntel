@@ -1,33 +1,27 @@
-from langchain_core.prompts import ChatPromptTemplate
-from app.ai.llm import get_llm
-from app.ai.prompts import CANDIDATES_PROMPT
-from app.ai.schemas import CandidatesResponse
+from typing import List
 from app.models.game_state import GameState
 from app.ai.question_chain import format_history
-from typing import List
+from app.ai.attribute_extractor import extract_attributes
+from app.ai.kb.retriever import LocalCandidateRetriever
+
+# We can instantiate the retriever once
+retriever = LocalCandidateRetriever()
 
 def generate_candidates(game: GameState) -> List[str]:
     # Only generate candidates if there are questions asked
     if not game.questions:
         return []
 
-    llm = get_llm()
-    structured_llm = llm.with_structured_output(CandidatesResponse)
+    # 1. Extract known attributes deterministically from history
+    attributes = extract_attributes(game)
     
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", CANDIDATES_PROMPT),
-        ("human", "List the candidates.")
-    ])
-    
-    chain = prompt | structured_llm
-    
+    # 2. Retrieve candidates from knowledge base
     history_text = format_history(game)
-    try:
-        response = chain.invoke({
-            "category": game.category,
-            "history": history_text
-        })
-        return response.candidates
-    except Exception as e:
-        print(f"Error generating candidates: {e}")
-        return []
+    candidates = retriever.retrieve(
+        category=game.category,
+        extracted_attributes=attributes,
+        query=history_text
+    )
+    
+    # Limit to top 5 for UI consistency
+    return candidates[:5]
