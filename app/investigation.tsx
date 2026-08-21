@@ -58,6 +58,14 @@ export default function InvestigationScreen() {
     }
   }, [status, isAnalyzing]);
 
+  useEffect(() => {
+    if (apiError) {
+      import('expo-haptics').then((Haptics) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      });
+    }
+  }, [apiError]);
+
   const handleAnswer = (value: AnswerValue) => {
     answerQuestion(value);
   };
@@ -85,9 +93,15 @@ export default function InvestigationScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {apiError && (
-          <View style={{ backgroundColor: colors.warning, padding: spacing.sm, borderRadius: radius.sm, marginBottom: spacing.sm }}>
-            <Text style={{ color: colors.white, ...typography.caption }}>{apiError}</Text>
-          </View>
+          <AnimatedPressable 
+            onPress={() => useGameStore.getState().clearError()} 
+            style={{ backgroundColor: colors.warning, padding: spacing.sm, borderRadius: radius.sm, marginBottom: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss error"
+          >
+            <Text style={{ color: colors.white, ...typography.caption, flex: 1 }}>{apiError}</Text>
+            <Ionicons name="close" size={18} color={colors.white} />
+          </AnimatedPressable>
         )}
         <InvestigationCard
           status={isThinking ? 'AI IS ANALYZING...' : 'ANALYZING'}

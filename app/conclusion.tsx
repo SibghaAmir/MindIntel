@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton } from '@/src/components';
+import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, AnimatedPressable } from '@/src/components';
 import { colors, gradients, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
 
@@ -32,13 +32,27 @@ export default function ConclusionScreen() {
     });
   };
 
+  useEffect(() => {
+    if (apiError) {
+      import('expo-haptics').then((Haptics) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      });
+    }
+  }, [apiError]);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {apiError && (
-          <View style={{ backgroundColor: colors.warning, padding: spacing.sm, borderRadius: radius.sm, marginBottom: spacing.sm }}>
-            <Text style={{ color: colors.white, ...typography.caption }}>{apiError}</Text>
-          </View>
+          <AnimatedPressable 
+            onPress={() => useGameStore.getState().clearError()}
+            style={{ backgroundColor: colors.warning, padding: spacing.sm, borderRadius: radius.sm, marginBottom: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss error"
+          >
+            <Text style={{ color: colors.white, ...typography.caption, flex: 1 }}>{apiError}</Text>
+            <Ionicons name="close" size={18} color={colors.white} />
+          </AnimatedPressable>
         )}
         <Text style={typography.eyebrow}>Case Conclusion</Text>
         <Text style={styles.headline}>I believe I&apos;ve identified the subject.</Text>

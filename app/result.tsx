@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, StatCard } from '@/src/components';
+import * as Haptics from 'expo-haptics';
+import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, StatCard, Confetti } from '@/src/components';
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
 import { useCasesStore } from '@/src/store/casesStore';
@@ -17,6 +18,12 @@ export default function ResultScreen() {
   const isAiWin = status === 'won';
   const [subjectInput, setSubjectInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!isAiWin) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    }
+  }, [isAiWin]);
 
   const score = useMemo(() => {
     const base = 1000;
@@ -136,6 +143,7 @@ export default function ResultScreen() {
           style={styles.secondaryGap}
         />
       </View>
+      {!isAiWin && <Confetti />}
     </SafeAreaView>
   );
 }
