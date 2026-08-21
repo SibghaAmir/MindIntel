@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, Share } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -51,6 +51,21 @@ export default function ResultScreen() {
 
   const handleSubmitPlayerCase = () => {
     setSubmitted(true);
+  };
+
+  const handleShare = async () => {
+    try {
+      const message = isAiWin
+        ? `I just played Kasoti! The AI guessed my subject ('${guess?.name}') with ${guess?.confidence}% confidence in only ${questionNumber} questions! Can you beat it?`
+        : `I just outsmarted the Kasoti AI! It couldn't guess my subject even after ${maxQuestions} questions! Can you beat my record?`;
+      
+      await Share.share({
+        message,
+        title: 'MindIntel Kasoti AI',
+      });
+    } catch (error) {
+      console.log('Error sharing', error);
+    }
   };
 
   return (
@@ -136,12 +151,20 @@ export default function ResultScreen() {
 
       <View style={styles.footer}>
         <PrimaryButton label="NEW CASE" icon="add-circle" onPress={handleNewCase} />
-        <SecondaryButton
-          label="VIEW CASE"
-          icon="document-text-outline"
-          onPress={() => router.replace('/(tabs)/cases')}
-          style={styles.secondaryGap}
-        />
+        <View style={styles.buttonRow}>
+          <SecondaryButton
+            label="SHARE"
+            icon="share-social-outline"
+            onPress={handleShare}
+            style={styles.flexButton}
+          />
+          <SecondaryButton
+            label="VIEW CASE"
+            icon="document-text-outline"
+            onPress={() => router.replace('/(tabs)/cases')}
+            style={styles.flexButton}
+          />
+        </View>
       </View>
       {!isAiWin && <Confetti />}
     </SafeAreaView>
@@ -220,5 +243,13 @@ const styles = StyleSheet.create({
   },
   secondaryGap: {
     marginTop: spacing.sm,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  flexButton: {
+    flex: 1,
   },
 });
