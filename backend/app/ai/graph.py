@@ -24,6 +24,7 @@ class GraphState(TypedDict):
     
     pending_answer: Optional[str]
     pending_confirmation: Optional[bool]
+    force_guess: Optional[bool]
 
 def analyze_state(state: GraphState) -> dict:
     # Passthrough for initialization/logging
@@ -41,7 +42,7 @@ def retrieve_candidates(state: GraphState) -> dict:
 
 def decide_action(state: GraphState) -> str:
     # The deterministic backend controls game flow logic here
-    if state["question_number"] >= state["max_questions"] or state["confidence"] > 90:
+    if state.get("force_guess") or state["question_number"] >= state["max_questions"] or state["confidence"] > 90:
         return "generate_guess"
     return "generate_question"
 
@@ -68,6 +69,9 @@ def generate_guess(state: GraphState) -> dict:
     }
 
 def process_answer(state: GraphState) -> dict:
+    if state.get("force_guess"):
+        return {"force_guess": False}
+
     ans = state.get("pending_answer")
     if not ans:
         return {}

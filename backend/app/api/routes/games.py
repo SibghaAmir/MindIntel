@@ -29,3 +29,10 @@ def confirm_guess_endpoint(game_id: UUID, request: ConfirmGuessRequest):
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
+
+@router.post("/{game_id}/force-guess", response_model=GameState)
+def force_guess_endpoint(game_id: UUID):
+    game = game_service.process_force_guess(game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return game

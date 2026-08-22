@@ -12,6 +12,7 @@ import {
   ProgressIndicator,
   QuestionCard,
   CandidateCard,
+  SecondaryButton,
 } from '@/src/components';
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
@@ -125,6 +126,15 @@ export default function InvestigationScreen() {
               disabled={isThinking}
             />
           ))}
+        </View>
+
+        <View style={{ marginTop: spacing.md }}>
+          <SecondaryButton
+            label="FORCE AI TO GUESS NOW"
+            icon="flash"
+            onPress={() => useGameStore.getState().forceGuess()}
+            disabled={isThinking || questionNumber < 3}
+          />
         </View>
 
         <AnimatedPressable style={styles.expandRow} onPress={toggleExpanded} haptic={false}>

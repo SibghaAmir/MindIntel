@@ -76,3 +76,19 @@ def process_guess_confirmation(game_id: UUID, request: ConfirmGuessRequest) -> O
     game = extract_game_state(result)
     games_db[game_id] = game
     return game
+
+def process_force_guess(game_id: UUID) -> Optional[GameState]:
+    if game_id not in games_db:
+        return None
+        
+    config = {"configurable": {"thread_id": str(game_id)}}
+    
+    # Update the graph state to trigger a forced guess and skip the pending answer
+    app_graph.update_state(config, {"force_guess": True, "pending_answer": None})
+    
+    # Resume the graph
+    result = app_graph.invoke(None, config)
+    
+    game = extract_game_state(result)
+    games_db[game_id] = game
+    return game

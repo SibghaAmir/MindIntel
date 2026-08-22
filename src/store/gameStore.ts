@@ -17,6 +17,7 @@ interface GameStore extends GameState {
   setMode: (mode: InvestigationMode) => void;
   startInvestigation: () => Promise<void>;
   answerQuestion: (answer: AnswerValue) => Promise<void>;
+  forceGuess: () => Promise<void>;
   confirmGuessCorrect: () => Promise<void>;
   rejectGuess: () => Promise<void>;
   submitPlayerAnswer: (subject: string) => void;
@@ -97,16 +98,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const newState = await gameApi.submitAnswer(state.gameId, answer);
-      // Bail out if the game was reset while analyzing
       if (get().gameId !== state.gameId) return;
 
-      set({
-        ...newState,
-        caseNumber: state.caseNumber,
-        isAnalyzing: false,
-      });
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
     } catch (error: any) {
       set({ apiError: error.message || 'Failed to submit answer.', isAnalyzing: false, status: 'playing' });
+    }
+  },
+
+  forceGuess: async () => {
+    const state = get();
+    if (state.status !== 'playing' || !state.gameId) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    set({ status: 'thinking', isAnalyzing: true, apiError: null });
+
+    try {
+      const newState = await gameApi.forceGuess(state.gameId);
+      if (get().gameId !== state.gameId) return;
+
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
+    } catch (error: any) {
+      set({ apiError: error.message || 'Failed to force guess.', isAnalyzing: false, status: 'playing' });
     }
   },
 
