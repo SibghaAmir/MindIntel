@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '@/src/theme';
+import { AchievementToast } from '@/src/components';
 
 export default function RootLayout() {
   return (
@@ -25,6 +26,7 @@ export default function RootLayout() {
           <Stack.Screen name="result" options={{ gestureEnabled: false }} />
           <Stack.Screen name="how-to-play" options={{ presentation: 'modal' }} />
         </Stack>
+        <AchievementToast />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -15,3 +15,4 @@ export { CandidateCard } from './CandidateCard';
 export { CaseCard } from './CaseCard';
 export { StatCard } from './StatCard';
 export { Confetti } from './Confetti';
+export { AchievementToast } from './AchievementToast';
