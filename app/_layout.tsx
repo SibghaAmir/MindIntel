@@ -20,6 +20,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false, animation: 'fade' }} />
           <Stack.Screen name="new-case" options={{ presentation: 'card' }} />
           <Stack.Screen name="investigation" options={{ gestureEnabled: false }} />
           <Stack.Screen name="conclusion" options={{ gestureEnabled: false }} />

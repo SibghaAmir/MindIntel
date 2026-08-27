@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, AnimatedPressable } from '@/src/components';
+import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, AnimatedPressable, BrainScanModal } from '@/src/components';
 import { colors, gradients, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
 
@@ -14,6 +14,8 @@ export default function ConclusionScreen() {
   const apiError = useGameStore((s) => s.apiError);
   const confirmGuessCorrect = useGameStore((s) => s.confirmGuessCorrect);
   const rejectGuess = useGameStore((s) => s.rejectGuess);
+  
+  const [scanVisible, setScanVisible] = useState(false);
 
   const handleCorrect = () => {
     confirmGuessCorrect().then(() => {
@@ -80,6 +82,12 @@ export default function ConclusionScreen() {
             </View>
           </GlassCard>
         )}
+
+        <SecondaryButton
+          label="VIEW AI BRAIN SCAN"
+          icon="hardware-chip-outline"
+          onPress={() => setScanVisible(true)}
+        />
       </ScrollView>
 
       <View style={styles.footer}>
@@ -91,6 +99,7 @@ export default function ConclusionScreen() {
           style={styles.secondaryGap}
         />
       </View>
+      <BrainScanModal visible={scanVisible} onClose={() => setScanVisible(false)} />
     </SafeAreaView>
   );
 }

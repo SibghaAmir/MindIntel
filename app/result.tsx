@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, StatCard, Confetti } from '@/src/components';
+import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, StatCard, Confetti, BrainScanModal } from '@/src/components';
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
 import { useCasesStore } from '@/src/store/casesStore';
@@ -18,6 +18,7 @@ export default function ResultScreen() {
   const isAiWin = status === 'won';
   const [subjectInput, setSubjectInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [scanVisible, setScanVisible] = useState(false);
 
   useEffect(() => {
     if (!isAiWin) {
@@ -147,6 +148,14 @@ export default function ResultScreen() {
             </GlassCard>
           </>
         )}
+
+        <View style={{ marginTop: spacing.lg, width: '100%' }}>
+          <SecondaryButton
+            label="VIEW AI BRAIN SCAN"
+            icon="hardware-chip-outline"
+            onPress={() => setScanVisible(true)}
+          />
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -167,6 +176,7 @@ export default function ResultScreen() {
         </View>
       </View>
       {!isAiWin && <Confetti />}
+      <BrainScanModal visible={scanVisible} onClose={() => setScanVisible(false)} />
     </SafeAreaView>
   );
 }

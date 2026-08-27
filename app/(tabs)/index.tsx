@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { router } from 'expo-router';
+import { router, Redirect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -19,6 +19,12 @@ export default function HomeScreen() {
   const cases = useCasesStore((s) => s.cases).slice(0, 3);
   const record = useCasesStore((s) => s.record);
   const resetGame = useGameStore((s) => s.resetGame);
+  const hasSeenTutorial = useCasesStore((s) => s.hasSeenTutorial);
+  const hasHydrated = useCasesStore((s) => s.hasHydrated);
+
+  if (hasHydrated && !hasSeenTutorial) {
+    return <Redirect href="/onboarding" />;
+  }
 
   const handleNewCase = () => {
     resetGame();

@@ -22,11 +22,13 @@ interface CasesStore {
   cases: CaseRecord[];
   record: PlayerRecord;
   hasHydrated: boolean;
+  hasSeenTutorial: boolean;
   unlockedAchievements: string[];
   recentUnlocks: string[];
   addCase: (record: CaseRecord) => void;
   setHasHydrated: (value: boolean) => void;
   clearRecentUnlocks: () => void;
+  completeTutorial: () => void;
 }
 
 function recomputeRecord(cases: CaseRecord[]): PlayerRecord {
@@ -78,6 +80,7 @@ export const useCasesStore = create<CasesStore>()(
       cases: MOCK_CASES,
       record: PLAYER_RECORD,
       hasHydrated: false,
+      hasSeenTutorial: false,
       unlockedAchievements: [],
       recentUnlocks: [],
 
@@ -96,6 +99,7 @@ export const useCasesStore = create<CasesStore>()(
 
       setHasHydrated: (value) => set({ hasHydrated: value }),
       clearRecentUnlocks: () => set({ recentUnlocks: [] }),
+      completeTutorial: () => set({ hasSeenTutorial: true }),
     }),
     {
       name: 'kasoti-cases-v1',
