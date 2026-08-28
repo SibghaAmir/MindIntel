@@ -23,6 +23,9 @@ export default function ResultScreen() {
   useEffect(() => {
     if (!isAiWin) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      import('@/src/services/audioManager').then((m) => m.audioManager.playSuccess());
+    } else {
+      import('@/src/services/audioManager').then((m) => m.audioManager.playSuccess());
     }
   }, [isAiWin]);
 

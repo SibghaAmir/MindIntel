@@ -1,13 +1,18 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '@/src/theme';
 import { AchievementToast } from '@/src/components';
+import { audioManager } from '@/src/services/audioManager';
 
 export default function RootLayout() {
+  useEffect(() => {
+    audioManager.init();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

@@ -7,6 +7,7 @@ import type {
   InvestigationMode,
 } from '@/src/types/game';
 import { gameApi } from '@/src/services/gameApi';
+import { audioManager } from '@/src/services/audioManager';
 
 interface GameStore extends GameState {
   selectedCategory: CaseCategoryId | null;
@@ -88,6 +89,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (state.status !== 'playing' || !state.gameId) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    audioManager.playBlip();
 
     // Optimistic UI update for thinking state
     const nextAnswers = [
@@ -95,13 +97,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       { question: state.currentQuestion, answer },
     ];
     set({ status: 'thinking', answers: nextAnswers, isAnalyzing: true, apiError: null });
+    audioManager.startThinking();
 
     try {
       const newState = await gameApi.submitAnswer(state.gameId, answer);
-      if (get().gameId !== state.gameId) return;
+      if (get().gameId !== state.gameId) {
+        audioManager.stopThinking();
+        return;
+      }
 
+      audioManager.stopThinking();
       set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
     } catch (error: any) {
+      audioManager.stopThinking();
       set({ apiError: error.message || 'Failed to submit answer.', isAnalyzing: false, status: 'playing' });
     }
   },
@@ -111,14 +119,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (state.status !== 'playing' || !state.gameId) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    audioManager.playBlip();
     set({ status: 'thinking', isAnalyzing: true, apiError: null });
+    audioManager.startThinking();
 
     try {
       const newState = await gameApi.forceGuess(state.gameId);
-      if (get().gameId !== state.gameId) return;
+      if (get().gameId !== state.gameId) {
+        audioManager.stopThinking();
+        return;
+      }
 
+      audioManager.stopThinking();
       set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
     } catch (error: any) {
+      audioManager.stopThinking();
       set({ apiError: error.message || 'Failed to force guess.', isAnalyzing: false, status: 'playing' });
     }
   },
