@@ -62,6 +62,10 @@ export default function HomeScreen() {
             <StatCard label="AI Wins" value={record.aiWins} icon="trophy-outline" accentColor={colors.electricViolet} />
             <StatCard label="Your Wins" value={record.playerWins} icon="ribbon-outline" accentColor={colors.success} />
           </View>
+          <View style={[styles.recordRow, { marginTop: spacing.sm }]}>
+            <StatCard label="Daily Streak" value={`${record.currentStreak || 0} 🔥`} icon="flame-outline" accentColor={colors.warning} style={{ flex: 1 }} />
+            <StatCard label="Best Score" value={record.bestScore} icon="star-outline" accentColor={colors.success} style={{ flex: 1 }} />
+          </View>
         </View>
 
         <View style={styles.recentSection}>

@@ -81,4 +81,6 @@ export const PLAYER_RECORD = {
   playerWins: 7,
   averageQuestions: 11.4,
   bestScore: 932,
+  currentStreak: 1,
+  lastPlayDate: '2026-08-12',
 };

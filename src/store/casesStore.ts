@@ -16,6 +16,8 @@ export interface PlayerRecord {
   playerWins: number;
   averageQuestions: number;
   bestScore: number;
+  currentStreak: number;
+  lastPlayDate: string;
 }
 
 interface CasesStore {
@@ -31,6 +33,34 @@ interface CasesStore {
   completeTutorial: () => void;
 }
 
+function computeStreak(cases: CaseRecord[]): { currentStreak: number; lastPlayDate: string } {
+  if (cases.length === 0) return { currentStreak: 0, lastPlayDate: '' };
+
+  const dates = Array.from(new Set(cases.map(c => c.date))).sort((a, b) => b.localeCompare(a));
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const lastPlay = dates[0];
+  
+  let streak = 0;
+  
+  const lastPlayDateObj = new Date(lastPlay);
+  const todayDateObj = new Date(todayStr);
+  const diffDays = Math.round((todayDateObj.getTime() - lastPlayDateObj.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 1) {
+    let expectedDate = new Date(lastPlay);
+    for (const d of dates) {
+      if (d === expectedDate.toISOString().slice(0, 10)) {
+        streak++;
+        expectedDate.setDate(expectedDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+  }
+
+  return { currentStreak: streak, lastPlayDate: lastPlay };
+}
+
 function recomputeRecord(cases: CaseRecord[]): PlayerRecord {
   const aiWins = cases.filter((c) => c.result === 'ai_victory').length;
   const playerWins = cases.filter((c) => c.result === 'player_victory').length;
@@ -38,6 +68,7 @@ function recomputeRecord(cases: CaseRecord[]): PlayerRecord {
     ? cases.reduce((sum, c) => sum + c.questionsUsed, 0) / cases.length
     : 0;
   const best = cases.length ? Math.max(...cases.map((c) => c.score)) : 0;
+  const { currentStreak, lastPlayDate } = computeStreak(cases);
 
   return {
     totalCases: cases.length,
@@ -45,6 +76,8 @@ function recomputeRecord(cases: CaseRecord[]): PlayerRecord {
     playerWins,
     averageQuestions: Math.round(avg * 10) / 10,
     bestScore: best,
+    currentStreak,
+    lastPlayDate,
   };
 }
 
