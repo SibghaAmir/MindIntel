@@ -11,6 +11,7 @@ class GraphState(TypedDict):
     game_id: str
     category: str
     mode: str
+    difficulty: str
     question_number: int
     max_questions: int
     questions: List[str]
@@ -42,7 +43,15 @@ def retrieve_candidates(state: GraphState) -> dict:
 
 def decide_action(state: GraphState) -> str:
     # The deterministic backend controls game flow logic here
-    if state.get("force_guess") or state["question_number"] >= state["max_questions"] or state["confidence"] > 90:
+    difficulty = state.get("difficulty", "normal")
+    if difficulty == "easy":
+        threshold = 80
+    elif difficulty == "expert":
+        threshold = 95
+    else:
+        threshold = 90
+
+    if state.get("force_guess") or state["question_number"] >= state["max_questions"] or state["confidence"] > threshold:
         return "generate_guess"
     return "generate_question"
 

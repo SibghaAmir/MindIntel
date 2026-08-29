@@ -14,12 +14,18 @@ def extract_game_state(graph_state: dict) -> GameState:
 
 def create_game(request: CreateGameRequest) -> GameState:
     game_id = uuid.uuid4()
-    max_questions = 20 if request.mode == "20-questions" else 10
+    if request.difficulty == "easy":
+        max_questions = 30
+    elif request.difficulty == "expert":
+        max_questions = 10
+    else:
+        max_questions = 20
     
     initial_state = {
         "game_id": str(game_id),
         "category": request.category,
         "mode": request.mode,
+        "difficulty": request.difficulty,
         "max_questions": max_questions,
         "question_number": 0,
         "status": "playing",

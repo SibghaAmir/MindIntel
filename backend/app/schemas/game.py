@@ -6,6 +6,7 @@ class GameState(BaseModel):
     game_id: UUID
     category: str
     mode: str
+    difficulty: str = "normal"
     question_number: int = 0
     max_questions: int
     questions: List[str] = Field(default_factory=list)
@@ -20,6 +21,7 @@ class GameState(BaseModel):
 class CreateGameRequest(BaseModel):
     category: str
     mode: str
+    difficulty: str = "normal"
 
 class AnswerRequest(BaseModel):
     answer: str

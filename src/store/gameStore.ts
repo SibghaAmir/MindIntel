@@ -8,6 +8,7 @@ import type {
 } from '@/src/types/game';
 import { gameApi } from '@/src/services/gameApi';
 import { audioManager } from '@/src/services/audioManager';
+import { useSettingsStore } from '@/src/store/settingsStore';
 
 interface GameStore extends GameState {
   selectedCategory: CaseCategoryId | null;
@@ -68,12 +69,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startInvestigation: async () => {
     const { selectedCategory, selectedMode } = get();
     const category: CaseCategoryId = selectedCategory ?? 'anything';
+    const difficulty = useSettingsStore.getState().difficulty;
     caseCounter += 1;
 
     set({ isAnalyzing: true, apiError: null, status: 'thinking' });
 
     try {
-      const newState = await gameApi.createGame(category, selectedMode);
+      const newState = await gameApi.createGame(category, selectedMode, difficulty);
       set({
         ...newState,
         caseNumber: caseCounter,
