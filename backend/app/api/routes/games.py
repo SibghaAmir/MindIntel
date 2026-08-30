@@ -36,3 +36,24 @@ def force_guess_endpoint(game_id: UUID):
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
+
+from pydantic import BaseModel
+class LearnRequest(BaseModel):
+    subject: str
+    category: str
+
+@router.post("/learn/subject")
+def learn_subject_endpoint(request: LearnRequest):
+    from app.ai.kb.data import SAMPLE_ENTITIES
+    
+    # Check if already exists
+    if any(e["name"].lower() == request.subject.lower() for e in SAMPLE_ENTITIES):
+        return {"status": "skipped", "message": "Already known"}
+        
+    SAMPLE_ENTITIES.append({
+        "name": request.subject,
+        "category": request.category if request.category else "anything",
+        "description": "User-submitted entity from simulated global learning.",
+        "attributes": {}
+    })
+    return {"status": "success", "message": f"Learned {request.subject}"}

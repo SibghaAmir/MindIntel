@@ -94,5 +94,12 @@ export const gameApi = {
       body: JSON.stringify({ correct }),
     });
     return mapBackendStateToFrontend(data);
+  },
+
+  learnSubject: async (subject: string, category: string): Promise<void> => {
+    await fetchApi('/games/learn/subject', {
+      method: 'POST',
+      body: JSON.stringify({ subject, category }),
+    });
   }
 };

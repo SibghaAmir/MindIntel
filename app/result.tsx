@@ -10,6 +10,8 @@ import { useGameStore } from '@/src/store/gameStore';
 import { useCasesStore } from '@/src/store/casesStore';
 import type { CaseRecord } from '@/src/types/game';
 
+import { gameApi } from '@/src/services/gameApi';
+
 export default function ResultScreen() {
   const { status, guess, questionNumber, maxQuestions, caseNumber, category, resetGame } =
     useGameStore();
@@ -53,8 +55,15 @@ export default function ResultScreen() {
     router.replace('/(tabs)');
   };
 
-  const handleSubmitPlayerCase = () => {
-    setSubmitted(true);
+  const handleSubmitPlayerCase = async () => {
+    if (!subjectInput.trim()) return;
+    try {
+      await gameApi.learnSubject(subjectInput.trim(), category ?? 'anything');
+      setSubmitted(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    } catch (e) {
+      console.warn('Failed to submit subject', e);
+    }
   };
 
   const handleShare = async () => {
