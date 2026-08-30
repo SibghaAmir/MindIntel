@@ -3,7 +3,7 @@ from app.ai.llm import get_llm
 from app.ai.prompts import GUESS_PROMPT
 from app.ai.schemas import GuessResponse
 from app.models.game_state import GameState
-from app.ai.question_chain import format_history
+from app.ai.question_chain import format_history, get_personality_prompt
 
 def generate_guess(game: GameState) -> GuessResponse:
     llm = get_llm()
@@ -18,11 +18,13 @@ def generate_guess(game: GameState) -> GuessResponse:
     
     history_text = format_history(game)
     candidates_text = ", ".join(game.candidates) if game.candidates else "No specific candidates identified yet."
+    personality_prompt = get_personality_prompt(getattr(game, 'personality', 'analytical'))
     
     response = chain.invoke({
         "category": game.category,
         "history": history_text,
-        "candidates": candidates_text
+        "candidates": candidates_text,
+        "personality_prompt": personality_prompt
     })
     
     return response

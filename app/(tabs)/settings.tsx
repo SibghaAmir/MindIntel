@@ -48,9 +48,11 @@ export default function SettingsScreen() {
     soundEnabled,
     hapticsEnabled,
     difficulty,
+    personality,
     toggleSound,
     toggleHaptics,
     setDifficulty,
+    setPersonality,
   } = useSettingsStore();
 
   return (
@@ -102,6 +104,30 @@ export default function SettingsScreen() {
                 >
                   <Text style={[styles.segmentLabel, difficulty === d.id && styles.segmentLabelActive]}>
                     {d.label}
+                  </Text>
+                </AnimatedPressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+          
+          <View style={styles.difficultyRow}>
+            <View style={styles.rowLeft}>
+              <View style={styles.iconWrap}>
+                <Ionicons name="chatbubbles-outline" size={17} color={colors.textSecondary} />
+              </View>
+              <Text style={styles.rowLabel}>AI Personality</Text>
+            </View>
+            <View style={styles.segmented}>
+              {(['analytical', 'sarcastic', 'aggressive'] as const).map((p) => (
+                <AnimatedPressable
+                  key={p}
+                  onPress={() => setPersonality(p)}
+                  style={[styles.segment, personality === p && styles.segmentActive]}
+                >
+                  <Text style={[styles.segmentLabel, personality === p && styles.segmentLabelActive]}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
                   </Text>
                 </AnimatedPressable>
               ))}

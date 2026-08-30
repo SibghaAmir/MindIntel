@@ -69,13 +69,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startInvestigation: async () => {
     const { selectedCategory, selectedMode } = get();
     const category: CaseCategoryId = selectedCategory ?? 'anything';
-    const difficulty = useSettingsStore.getState().difficulty;
+    const { difficulty, personality } = useSettingsStore.getState();
     caseCounter += 1;
 
     set({ isAnalyzing: true, apiError: null, status: 'thinking' });
 
     try {
-      const newState = await gameApi.createGame(category, selectedMode, difficulty);
+      const newState = await gameApi.createGame(category, selectedMode, difficulty, personality);
       set({
         ...newState,
         caseNumber: caseCounter,

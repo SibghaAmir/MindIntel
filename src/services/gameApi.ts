@@ -65,10 +65,10 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
 };
 
 export const gameApi = {
-  createGame: async (category: string, mode: string, difficulty: string): Promise<GameState> => {
+  createGame: async (category: string, mode: string, difficulty: string, personality: string): Promise<GameState> => {
     const data = await fetchApi<BackendGameState>('/games', {
       method: 'POST',
-      body: JSON.stringify({ category, mode, difficulty }),
+      body: JSON.stringify({ category, mode, difficulty, personality }),
     });
     return mapBackendStateToFrontend(data);
   },

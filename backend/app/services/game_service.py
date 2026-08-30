@@ -26,6 +26,7 @@ def create_game(request: CreateGameRequest) -> GameState:
         "category": request.category,
         "mode": request.mode,
         "difficulty": request.difficulty,
+        "personality": request.personality,
         "max_questions": max_questions,
         "question_number": 0,
         "status": "playing",

@@ -12,6 +12,7 @@ class GraphState(TypedDict):
     category: str
     mode: str
     difficulty: str
+    personality: str
     question_number: int
     max_questions: int
     questions: List[str]

@@ -13,6 +13,14 @@ def format_history(game: GameState) -> str:
         history_lines.append(f"Q: {q}\nA: {a}")
     return "\n".join(history_lines)
 
+def get_personality_prompt(personality: str) -> str:
+    if personality == "sarcastic":
+        return "Your personality is a Sarcastic Robot. You are extremely intelligent but easily bored by humans. Your questions should occasionally have a dry, cynical, or sarcastic tone."
+    elif personality == "aggressive":
+        return "Your personality is an Aggressive Interrogator. You treat this game like a high-stakes police interrogation. Your questions should be blunt, demanding, and intense."
+    else:
+        return "Your personality is a Forensic Analytical AI. You are strictly logical, precise, and professional. Your questions should be clinical and objective."
+
 def generate_next_question(game: GameState) -> QuestionResponse:
     llm = get_llm()
     structured_llm = llm.with_structured_output(QuestionResponse)
@@ -26,11 +34,13 @@ def generate_next_question(game: GameState) -> QuestionResponse:
     
     history_text = format_history(game)
     candidates_text = ", ".join(game.candidates) if game.candidates else "No specific candidates identified yet."
+    personality_prompt = get_personality_prompt(getattr(game, 'personality', 'analytical'))
     
     response = chain.invoke({
         "category": game.category,
         "history": history_text,
-        "candidates": candidates_text
+        "candidates": candidates_text,
+        "personality_prompt": personality_prompt
     })
     
     return response

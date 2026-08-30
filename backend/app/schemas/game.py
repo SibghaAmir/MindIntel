@@ -7,6 +7,7 @@ class GameState(BaseModel):
     category: str
     mode: str
     difficulty: str = "normal"
+    personality: str = "analytical"
     question_number: int = 0
     max_questions: int
     questions: List[str] = Field(default_factory=list)
@@ -22,6 +23,7 @@ class CreateGameRequest(BaseModel):
     category: str
     mode: str
     difficulty: str = "normal"
+    personality: str = "analytical"
 
 class AnswerRequest(BaseModel):
     answer: str

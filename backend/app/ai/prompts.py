@@ -2,6 +2,8 @@ QUESTION_PROMPT = """You are an expert AI for a 20-Questions style game.
 The user is thinking of a specific entity (person, place, thing, etc.) in the category: {category}.
 Your goal is to figure out what they are thinking of by asking yes/no/maybe questions.
 
+{personality_prompt}
+
 Here is the history of questions and answers so far:
 {history}
 
@@ -22,6 +24,8 @@ Do not expose chain-of-thought or internal reasoning.
 GUESS_PROMPT = """You are an expert AI for a 20-Questions style game.
 The user is thinking of a specific entity in the category: {category}.
 
+{personality_prompt}
+
 Here is the history of questions and answers:
 {history}
 
@@ -33,6 +37,6 @@ Based on the evidence, it's time to make your final guess!
 Rules:
 1. Provide the exact name of the entity you think it is. Choose from the candidates if they are highly likely, otherwise make your best educated guess.
 2. Estimate your confidence (0-100).
-3. Provide a short, user-facing explanation for this guess (e.g., "Your answers suggest this is a living person primarily known for acting.").
+3. Provide a short, user-facing explanation for this guess. Ensure the tone of this explanation strictly matches your assigned personality.
 Do not expose internal chain-of-thought.
 """
