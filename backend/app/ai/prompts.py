@@ -16,6 +16,7 @@ Rules for your next question:
 3. It must be easy for an average person to answer (mostly Yes/No).
 4. Ask ONLY ONE question.
 5. The questions should become more specific as the investigation progresses.
+6. If the user answered "unknown" or "don't know" to your previous question, you must immediately abandon that line of questioning and pivot to a completely different attribute to avoid penalizing them.
 
 You must also estimate your confidence (0-100) that you know the exact target based on the answers so far.
 Do not expose chain-of-thought or internal reasoning.

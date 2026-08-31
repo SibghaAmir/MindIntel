@@ -14,6 +14,7 @@ Your job is to extract all definitively confirmed attributes about the entity ba
 Return them as a key-value dictionary. Use standard, normalized keys (e.g., 'is_real', 'alive', 'gender', 'country', 'profession').
 Do NOT guess attributes. Only extract what is clearly established by a 'Yes' or 'No'.
 If the history is empty or nothing is confirmed yet, return an empty dictionary.
+IMPORTANT: If a question was answered with 'unknown', 'don't know', or 'maybe', DO NOT extract any attribute for it. Ignored these entirely.
 """
 
 def extract_attributes(game: GameState) -> dict:
