@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +28,9 @@ const ACCENT: Record<AnswerValue, string> = {
 };
 
 export function AnswerButton({ value, label, onPress, disabled }: AnswerButtonProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const accent = ACCENT[value];
 
   return (
@@ -44,7 +48,7 @@ export function AnswerButton({ value, label, onPress, disabled }: AnswerButtonPr
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   button: {
     flexBasis: '48%',
     minHeight: 64,

@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { StyleSheet, Text, ViewStyle, StyleProp, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +25,9 @@ export function PrimaryButton({
   style,
   fullWidth = true,
 }: PrimaryButtonProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   return (
     <AnimatedPressable
       onPress={onPress}
@@ -52,7 +56,7 @@ export function PrimaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   fullWidth: {
     width: '100%',
   },

@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import Animated, {
@@ -15,6 +16,9 @@ interface QuestionCardProps {
 }
 
 export function QuestionCard({ question, questionKey }: QuestionCardProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(10);
 
@@ -39,7 +43,7 @@ export function QuestionCard({ question, questionKey }: QuestionCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   card: {
     minHeight: 110,
     justifyContent: 'center',

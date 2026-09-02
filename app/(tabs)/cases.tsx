@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,6 +7,9 @@ import { colors, spacing, typography } from '@/src/theme';
 import { useCasesStore } from '@/src/store/casesStore';
 
 export default function CasesScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const cases = useCasesStore((s) => s.cases);
 
   return (
@@ -25,7 +29,7 @@ export default function CasesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,6 +7,9 @@ import { StyleSheet } from 'react-native';
 import { colors } from '@/src/theme';
 
 export default function TabsLayout() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   return (
     <Tabs
       screenOptions={{
@@ -69,7 +73,7 @@ export default function TabsLayout() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   tabBar: {
     position: 'absolute',
     borderTopWidth: 1,

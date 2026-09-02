@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
@@ -16,6 +17,9 @@ export function ConfidenceBar({
   color = colors.glowBlue,
   showValue = true,
 }: ConfidenceBarProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const width = useSharedValue(0);
 
   useEffect(() => {
@@ -39,7 +43,7 @@ export function ConfidenceBar({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   wrap: {
     marginBottom: spacing.sm,
   },

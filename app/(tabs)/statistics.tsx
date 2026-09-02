@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,6 +7,9 @@ import { colors, spacing, typography } from '@/src/theme';
 import { useCasesStore } from '@/src/store/casesStore';
 
 export default function StatisticsScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const record = useCasesStore((s) => s.record);
   const total = record.aiWins + record.playerWins || 1;
   const aiWinRate = Math.round((record.aiWins / total) * 100);
@@ -42,7 +46,7 @@ export default function StatisticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

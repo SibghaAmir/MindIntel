@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { colors, spacing } from '@/src/theme';
@@ -8,6 +9,9 @@ interface ProgressIndicatorProps {
 }
 
 export function ProgressIndicator({ current, total }: ProgressIndicatorProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const dots = Array.from({ length: total }, (_, i) => i < current);
 
   return (
@@ -28,7 +32,7 @@ export function ProgressIndicator({ current, total }: ProgressIndicatorProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

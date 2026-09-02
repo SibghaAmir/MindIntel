@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Switch } from 'react-native';
 import { router } from 'expo-router';
@@ -13,37 +14,40 @@ const DIFFICULTIES: { id: Difficulty; label: string }[] = [
   { id: 'expert', label: 'Expert' },
 ];
 
-function SettingRow({
-  icon,
-  label,
-  right,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  right?: React.ReactNode;
-  onPress?: () => void;
-}) {
-  const Wrapper = onPress ? AnimatedPressable : View;
-  return (
-    <Wrapper
-      style={styles.row}
-      onPress={onPress}
-      accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={label}
-    >
-      <View style={styles.rowLeft}>
-        <View style={styles.iconWrap}>
-          <Ionicons name={icon} size={17} color={colors.textSecondary} />
-        </View>
-        <Text style={styles.rowLabel}>{label}</Text>
-      </View>
-      {right ?? <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />}
-    </Wrapper>
-  );
-}
-
 export default function SettingsScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
+  function SettingRow({
+    icon,
+    label,
+    right,
+    onPress,
+  }: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    right?: React.ReactNode;
+    onPress?: () => void;
+  }) {
+    const Wrapper = onPress ? AnimatedPressable : View;
+    return (
+      <Wrapper
+        style={styles.row}
+        onPress={onPress}
+        accessibilityRole={onPress ? 'button' : undefined}
+        accessibilityLabel={label}
+      >
+        <View style={styles.rowLeft}>
+          <View style={styles.iconWrap}>
+            <Ionicons name={icon} size={17} color={colors.textSecondary} />
+          </View>
+          <Text style={styles.rowLabel}>{label}</Text>
+        </View>
+        {right ?? <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />}
+      </Wrapper>
+    );
+  }
+
   const {
     soundEnabled,
     hapticsEnabled,
@@ -140,7 +144,7 @@ export default function SettingsScreen() {
           <SettingRow
             icon="moon-outline"
             label="Dark Theme"
-            right={<Switch value disabled trackColor={{ false: colors.cardSecondary, true: colors.primaryBlue }} thumbColor={colors.textPrimary} />}
+            right={<Switch value={useSettingsStore().darkTheme} onValueChange={() => useSettingsStore.getState().toggleDarkTheme()} trackColor={{ false: colors.cardSecondary, true: colors.primaryBlue }} thumbColor={colors.textPrimary} />}
           />
         </GlassCard>
 
@@ -157,7 +161,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

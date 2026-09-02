@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +12,9 @@ interface CaseCardProps {
 }
 
 export function CaseCard({ record }: CaseCardProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const isAiWin = record.result === 'ai_victory';
 
   return (
@@ -47,7 +51,7 @@ export function CaseCard({ record }: CaseCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   card: {
     marginBottom: spacing.md,
   },

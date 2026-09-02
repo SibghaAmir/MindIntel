@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, ViewStyle, StyleProp, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -20,6 +21,9 @@ export function GlassCard({
   glow = false,
   blur = false,
 }: GlassCardProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const content = (
     <View
       style={[
@@ -48,7 +52,7 @@ export function GlassCard({
   return content;
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   base: {
     borderRadius: radius.lg,
     borderWidth: 1,

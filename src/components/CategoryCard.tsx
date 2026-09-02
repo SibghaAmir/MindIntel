@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +14,9 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ option, selected, onPress }: CategoryCardProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const emphasized = option.emphasized;
 
   return (
@@ -52,7 +56,7 @@ export function CategoryCard({ option, selected, onPress }: CategoryCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   card: {
     flexBasis: '48%',
     minHeight: 108,

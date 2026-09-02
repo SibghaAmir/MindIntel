@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +10,9 @@ interface CandidateCardProps {
 }
 
 export function CandidateCard({ rank, name }: CandidateCardProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   return (
     <View style={styles.row}>
       <View style={styles.rankWrap}>
@@ -20,7 +24,7 @@ export function CandidateCard({ rank, name }: CandidateCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

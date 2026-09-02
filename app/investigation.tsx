@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { router } from 'expo-router';
@@ -37,6 +38,9 @@ function coreStateForConfidence(confidence: number): CoreState {
 }
 
 export default function InvestigationScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const {
     caseNumber,
     currentQuestion,
@@ -185,7 +189,7 @@ export default function InvestigationScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

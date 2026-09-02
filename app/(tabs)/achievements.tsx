@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +9,9 @@ import { useCasesStore } from '@/src/store/casesStore';
 import { ACHIEVEMENTS } from '@/src/data/achievements';
 
 export default function AchievementsScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const unlocked = useCasesStore((s) => s.unlockedAchievements);
   const totalUnlocked = unlocked.length;
   const totalAchievements = ACHIEVEMENTS.length;
@@ -59,7 +63,7 @@ export default function AchievementsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

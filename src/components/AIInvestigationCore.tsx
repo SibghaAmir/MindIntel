@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop, G } from 'react-native-svg';
@@ -39,6 +40,9 @@ const STATE_COLOR: Record<CoreState, string> = {
 };
 
 export function AIInvestigationCore({ state = 'idle', size = 200 }: AIInvestigationCoreProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const pulse = useSharedValue(1);
   const rotate = useSharedValue(0);
   const ringOpacity = useSharedValue(0.5);
@@ -211,7 +215,7 @@ export function AIInvestigationCore({ state = 'idle', size = 200 }: AIInvestigat
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   wrap: {
     alignItems: 'center',
     justifyContent: 'center',

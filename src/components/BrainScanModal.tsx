@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
@@ -13,6 +14,9 @@ interface BrainScanModalProps {
 }
 
 export function BrainScanModal({ visible, onClose }: BrainScanModalProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const { snapshot, questions, answers } = useGameStore();
 
   return (
@@ -78,7 +82,7 @@ export function BrainScanModal({ visible, onClose }: BrainScanModalProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   container: {
     flex: 1,
     marginTop: 80,

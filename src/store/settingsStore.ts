@@ -11,6 +11,7 @@ interface SettingsStore {
   darkTheme: boolean;
   toggleSound: () => void;
   toggleHaptics: () => void;
+  toggleDarkTheme: () => void;
   setDifficulty: (difficulty: Difficulty) => void;
   setPersonality: (personality: AIPersonality) => void;
 }
@@ -23,6 +24,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   darkTheme: true,
   toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
   toggleHaptics: () => set((s) => ({ hapticsEnabled: !s.hapticsEnabled })),
+  toggleDarkTheme: () => set((s) => ({ darkTheme: !s.darkTheme })),
   setDifficulty: (difficulty) => set({ difficulty }),
   setPersonality: (personality) => set({ personality }),
 }));

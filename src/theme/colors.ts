@@ -32,4 +32,38 @@ export const gradients = {
   cardSheen: ['rgba(255,255,255,0.05)', 'rgba(255,255,255,0)'] as const,
 };
 
+export const lightColors = {
+  background: '#F5F7FA',
+  backgroundElevated: '#FFFFFF',
+  card: '#FFFFFF',
+  cardSecondary: '#F0F3F8',
+  border: 'rgba(0, 20, 50, 0.08)',
+  borderStrong: 'rgba(0, 20, 50, 0.16)',
+
+  primaryBlue: '#3A5CFF',
+  electricViolet: '#6041FF',
+  glowBlue: '#4A8CFF',
+
+  textPrimary: '#1A2333',
+  textSecondary: '#6B7A99',
+  textTertiary: 'rgba(26, 35, 51, 0.5)',
+
+  success: '#29B969',
+  warning: '#F59A23',
+  danger: '#F25252',
+
+  overlay: 'rgba(255, 255, 255, 0.72)',
+  white: '#FFFFFF',
+  black: '#000000',
+} as const;
+
+export const lightGradients = {
+  hero: ['#FFFFFF', '#F5F7FA'] as const,
+  core: ['#6041FF', '#3A5CFF', '#4A8CFF'] as const,
+  cta: ['#3A5CFF', '#6041FF'] as const,
+  glow: ['rgba(74,140,255,0.25)', 'rgba(74,140,255,0)'] as const,
+  successGlow: ['rgba(41,185,105,0.25)', 'rgba(41,185,105,0)'] as const,
+  cardSheen: ['rgba(0,0,0,0.02)', 'rgba(0,0,0,0)'] as const,
+};
+
 export type ThemeColors = typeof colors;

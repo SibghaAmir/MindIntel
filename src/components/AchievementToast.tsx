@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -16,6 +17,9 @@ import { useCasesStore } from '@/src/store/casesStore';
 import { ACHIEVEMENTS } from '@/src/data/achievements';
 
 export function AchievementToast() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const recentUnlocks = useCasesStore((s) => s.recentUnlocks);
   const clearRecentUnlocks = useCasesStore((s) => s.clearRecentUnlocks);
   const [currentDisplay, setCurrentDisplay] = useState<string | null>(null);
@@ -79,7 +83,7 @@ export function AchievementToast() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   container: {
     position: 'absolute',
     top: 0,

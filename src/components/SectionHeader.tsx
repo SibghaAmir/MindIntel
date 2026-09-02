@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { colors, spacing, typography } from '@/src/theme';
@@ -10,6 +11,9 @@ interface SectionHeaderProps {
 }
 
 export function SectionHeader({ title, actionLabel, onActionPress, style }: SectionHeaderProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   return (
     <View style={[styles.row, style]}>
       <Text style={typography.eyebrow}>{title}</Text>
@@ -22,7 +26,7 @@ export function SectionHeader({ title, actionLabel, onActionPress, style }: Sect
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

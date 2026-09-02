@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
@@ -9,6 +10,9 @@ import { colors, gradients, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
 
 export default function ConclusionScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const guess = useGameStore((s) => s.guess);
   const isAnalyzing = useGameStore((s) => s.isAnalyzing);
   const apiError = useGameStore((s) => s.apiError);
@@ -104,7 +108,7 @@ export default function ConclusionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Share } from 'react-native';
 import { router } from 'expo-router';
@@ -13,6 +14,9 @@ import type { CaseRecord } from '@/src/types/game';
 import { gameApi } from '@/src/services/gameApi';
 
 export default function ResultScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const { status, guess, questionNumber, maxQuestions, caseNumber, category, resetGame } =
     useGameStore();
   const addCase = useCasesStore((s) => s.addCase);
@@ -193,7 +197,7 @@ export default function ResultScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

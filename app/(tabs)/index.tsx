@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { router, Redirect } from 'expo-router';
@@ -16,6 +17,9 @@ import { useCasesStore } from '@/src/store/casesStore';
 import { useGameStore } from '@/src/store/gameStore';
 
 export default function HomeScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const cases = useCasesStore((s) => s.cases).slice(0, 3);
   const record = useCasesStore((s) => s.record);
   const resetGame = useGameStore((s) => s.resetGame);
@@ -83,7 +87,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

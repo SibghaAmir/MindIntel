@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { GlassCard } from './GlassCard';
@@ -11,6 +12,9 @@ interface InvestigationCardProps {
 }
 
 export function InvestigationCard({ status, message, coreState }: InvestigationCardProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   return (
     <GlassCard style={styles.card} secondary>
       <View style={styles.headerRow}>
@@ -28,7 +32,7 @@ export function InvestigationCard({ status, message, coreState }: InvestigationC
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   card: {
     marginBottom: spacing.lg,
   },

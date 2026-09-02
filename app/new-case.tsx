@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
@@ -10,6 +11,9 @@ import { useGameStore } from '@/src/store/gameStore';
 import type { CaseCategoryId, InvestigationMode } from '@/src/types/game';
 
 export default function NewCaseScreen() {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   const setCategory = useGameStore((s) => s.setCategory);
   const setMode = useGameStore((s) => s.setMode);
   const startInvestigation = useGameStore((s) => s.startInvestigation);
@@ -96,7 +100,7 @@ export default function NewCaseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,

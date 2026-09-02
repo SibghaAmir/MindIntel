@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +14,9 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, icon, accentColor = colors.glowBlue, style }: StatCardProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   return (
     <GlassCard style={[styles.card, style]} secondary>
       {icon && (
@@ -26,7 +30,7 @@ export function StatCard({ label, value, icon, accentColor = colors.glowBlue, st
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   card: {
     flex: 1,
     alignItems: 'flex-start',

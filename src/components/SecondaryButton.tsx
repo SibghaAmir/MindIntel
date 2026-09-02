@@ -1,3 +1,4 @@
+import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { StyleSheet, Text, ViewStyle, StyleProp } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,9 @@ export function SecondaryButton({
   style,
   fullWidth = true,
 }: SecondaryButtonProps) {
+  const { colors, gradients } = useTheme();
+  const styles = useStyles(colors, gradients);
+
   return (
     <AnimatedPressable
       onPress={onPress}
@@ -41,7 +45,7 @@ export function SecondaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = (colors: any, gradients: any) => StyleSheet.create({
   fullWidth: {
     width: '100%',
   },
