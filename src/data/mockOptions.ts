@@ -15,6 +15,12 @@ export const CATEGORY_OPTIONS: CategoryOption[] = [
     description: 'Let the AI investigate without limits',
     emphasized: true,
   },
+  {
+    id: 'custom',
+    label: 'Custom Niche',
+    icon: 'create-outline',
+    description: 'Type any niche category you want',
+  },
 ];
 
 export const MODE_OPTIONS: ModeOption[] = [

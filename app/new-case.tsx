@@ -1,6 +1,6 @@
 import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,10 +20,13 @@ export default function NewCaseScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState<CaseCategoryId | null>(null);
   const [selectedMode, setSelectedMode] = useState<InvestigationMode>('standard');
+  const [customCategoryText, setCustomCategoryText] = useState('');
 
   const handleSelectCategory = (id: CaseCategoryId) => {
     setSelectedCategory(id);
-    setCategory(id);
+    if (id !== 'custom') {
+      setCategory(id);
+    }
   };
 
   const handleSelectMode = (id: InvestigationMode) => {
@@ -32,9 +35,15 @@ export default function NewCaseScreen() {
   };
 
   const handleStart = () => {
-    if (!selectedCategory) {
-      handleSelectCategory('anything');
+    let finalCategory = selectedCategory;
+    if (!finalCategory) {
+      finalCategory = 'anything';
+      setCategory('anything');
+    } else if (finalCategory === 'custom') {
+      finalCategory = customCategoryText.trim() || 'anything';
+      setCategory(finalCategory);
     }
+    
     setMode(selectedMode);
     startInvestigation();
     router.push('/investigation');
@@ -64,6 +73,19 @@ export default function NewCaseScreen() {
             />
           ))}
         </View>
+
+        {selectedCategory === 'custom' && (
+          <View style={styles.customInputContainer}>
+            <TextInput
+              style={[styles.customInput, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
+              placeholder="e.g. Marvel Cinematic Universe"
+              placeholderTextColor={colors.textTertiary}
+              value={customCategoryText}
+              onChangeText={setCustomCategoryText}
+              autoFocus
+            />
+          </View>
+        )}
 
         <SectionHeader title="Investigation Mode" style={styles.modeHeader} />
         {MODE_OPTIONS.map((mode) => {
@@ -134,6 +156,17 @@ const useStyles = (colors: any, gradients: any) => StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     rowGap: spacing.sm,
+  },
+  customInputContainer: {
+    marginTop: spacing.sm,
+  },
+  customInput: {
+    backgroundColor: colors.card,
+    borderWidth: 1.5,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    ...typography.bodyMedium,
   },
   modeHeader: {
     marginTop: spacing.xl,

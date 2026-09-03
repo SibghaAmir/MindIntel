@@ -3,15 +3,7 @@ import type { Ionicons } from '@expo/vector-icons';
 
 export type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
-export type CaseCategoryId =
-  | 'people'
-  | 'characters'
-  | 'animals'
-  | 'places'
-  | 'objects'
-  | 'games'
-  | 'brands'
-  | 'anything';
+export type CaseCategoryId = string;
 
 export type InvestigationMode = 'standard' | 'rapid';
 
