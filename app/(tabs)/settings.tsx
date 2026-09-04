@@ -137,6 +137,19 @@ export default function SettingsScreen() {
               ))}
             </View>
           </View>
+          <View style={styles.divider} />
+          <SettingRow
+            icon="timer-outline"
+            label="Time Attack Mode (10s)"
+            right={
+              <Switch
+                value={useSettingsStore().timeAttack}
+                onValueChange={() => useSettingsStore.getState().toggleTimeAttack()}
+                trackColor={{ false: colors.cardSecondary, true: colors.danger }}
+                thumbColor={colors.textPrimary}
+              />
+            }
+          />
         </GlassCard>
 
         <SectionHeader title="Appearance" style={styles.sectionHeader} />

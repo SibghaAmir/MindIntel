@@ -1,6 +1,7 @@
 import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, LayoutAnimation, Platform, UIManager } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ import {
 } from '@/src/components';
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
+import { useSettingsStore } from '@/src/store/settingsStore';
 import type { AnswerValue } from '@/src/types/game';
 import type { CoreState } from '@/src/components';
 
@@ -37,9 +39,39 @@ function coreStateForConfidence(confidence: number): CoreState {
   return 'thinking';
 }
 
+function TimeAttackBar({ active, onExpire, questionKey }: { active: boolean, onExpire: () => void, questionKey: number }) {
+  const { colors } = useTheme();
+  const progress = useSharedValue(1);
+
+  useEffect(() => {
+    if (active) {
+      progress.value = 1;
+      progress.value = withTiming(0, { duration: 10000, easing: Easing.linear }, (finished) => {
+        if (finished) {
+          runOnJS(onExpire)();
+        }
+      });
+    } else {
+      progress.value = 1;
+    }
+  }, [active, questionKey]);
+
+  const style = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+    backgroundColor: progress.value < 0.25 ? colors.danger : colors.glowBlue
+  }));
+
+  return (
+    <View style={{ height: 6, backgroundColor: colors.border, borderRadius: 3, overflow: 'hidden', marginBottom: spacing.md }}>
+      <Animated.View style={[{ height: '100%', borderRadius: 3 }, style]} />
+    </View>
+  );
+}
+
 export default function InvestigationScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles(colors, gradients);
+  const timeAttack = useSettingsStore((s) => s.timeAttack);
 
   const {
     caseNumber,
@@ -117,6 +149,14 @@ export default function InvestigationScreen() {
           }
           coreState={isThinking ? 'thinking' : coreStateForConfidence(confidence)}
         />
+
+        {timeAttack && (
+          <TimeAttackBar
+            active={!isThinking && status === 'playing'}
+            onExpire={() => handleAnswer('unknown')}
+            questionKey={questionNumber}
+          />
+        )}
 
         <QuestionCard question={currentQuestion} questionKey={questionNumber} />
 
