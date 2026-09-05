@@ -1,10 +1,12 @@
 import { useTheme } from '@/src/theme/ThemeContext';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Share } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as Sharing from 'expo-sharing';
+import ViewShot from 'react-native-view-shot';
 import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, StatCard, Confetti, BrainScanModal } from '@/src/components';
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
@@ -70,16 +72,32 @@ export default function ResultScreen() {
     }
   };
 
+  const viewShotRef = useRef<ViewShot>(null);
+
   const handleShare = async () => {
     try {
-      const message = isAiWin
-        ? `I just played Kasoti! The AI guessed my subject ('${guess?.name}') with ${guess?.confidence}% confidence in only ${questionNumber} questions! Can you beat it?`
-        : `I just outsmarted the Kasoti AI! It couldn't guess my subject even after ${maxQuestions} questions! Can you beat my record?`;
-      
-      await Share.share({
-        message,
-        title: 'MindIntel Kasoti AI',
-      });
+      if (viewShotRef.current && viewShotRef.current.capture) {
+        const uri = await viewShotRef.current.capture();
+        const isAvailable = await Sharing.isAvailableAsync();
+        
+        if (isAvailable) {
+          await Sharing.shareAsync(uri, {
+            mimeType: 'image/jpeg',
+            dialogTitle: 'Share your Kasoti result!',
+            UTI: 'public.jpeg',
+          });
+        } else {
+          // Fallback to text
+          const message = isAiWin
+            ? `I just played Kasoti! The AI guessed my subject ('${guess?.name}') with ${guess?.confidence}% confidence in only ${questionNumber} questions! Can you beat it?`
+            : `I just outsmarted the Kasoti AI! It couldn't guess my subject even after ${maxQuestions} questions! Can you beat my record?`;
+          
+          await Share.share({
+            message,
+            title: 'MindIntel Kasoti AI',
+          });
+        }
+      }
     } catch (error) {
       console.log('Error sharing', error);
     }
@@ -88,82 +106,88 @@ export default function ResultScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.coreWrap}>
-          <AIInvestigationCore state={isAiWin ? 'success' : 'failure'} size={150} />
-        </View>
+        <ViewShot 
+          ref={viewShotRef} 
+          options={{ format: 'jpg', quality: 0.9 }} 
+          style={[styles.shareCard, { backgroundColor: colors.background }]}
+        >
+          <View style={styles.coreWrap}>
+            <AIInvestigationCore state={isAiWin ? 'success' : 'failure'} size={150} />
+          </View>
 
-        {isAiWin ? (
-          <>
-            <Text style={styles.headline}>CASE CLOSED</Text>
-            <Text style={styles.subheadline}>Subject Identified</Text>
+          {isAiWin ? (
+            <>
+              <Text style={styles.headline}>CASE CLOSED</Text>
+              <Text style={styles.subheadline}>Subject Identified</Text>
 
-            <View style={styles.statsRow}>
+              <View style={styles.statsRow}>
+                <StatCard
+                  label="Questions Used"
+                  value={`${questionNumber} / ${maxQuestions}`}
+                  icon="help-circle-outline"
+                  accentColor={colors.glowBlue}
+                />
+                <StatCard
+                  label="AI Confidence"
+                  value={`${guess?.confidence ?? 0}%`}
+                  icon="analytics-outline"
+                  accentColor={colors.electricViolet}
+                />
+              </View>
               <StatCard
-                label="Questions Used"
-                value={`${questionNumber} / ${maxQuestions}`}
-                icon="help-circle-outline"
-                accentColor={colors.glowBlue}
+                label="Investigation Score"
+                value={score}
+                icon="trophy-outline"
+                accentColor={colors.success}
+                style={styles.scoreCard}
               />
-              <StatCard
-                label="AI Confidence"
-                value={`${guess?.confidence ?? 0}%`}
-                icon="analytics-outline"
-                accentColor={colors.electricViolet}
-              />
-            </View>
-            <StatCard
-              label="Investigation Score"
-              value={score}
-              icon="trophy-outline"
-              accentColor={colors.success}
-              style={styles.scoreCard}
-            />
-          </>
-        ) : (
-          <>
-            <Text style={styles.headline}>CASE UNSOLVED</Text>
-            <Text style={styles.subheadline}>You Outsmarted the AI</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.headline}>CASE UNSOLVED</Text>
+              <Text style={styles.subheadline}>You Outsmarted the AI</Text>
 
-            <View style={styles.statsRow}>
-              <StatCard
-                label="Questions Used"
-                value={`${maxQuestions} / ${maxQuestions}`}
-                icon="help-circle-outline"
-                accentColor={colors.warning}
-              />
-            </View>
+              <View style={styles.statsRow}>
+                <StatCard
+                  label="Questions Used"
+                  value={`${maxQuestions} / ${maxQuestions}`}
+                  icon="help-circle-outline"
+                  accentColor={colors.warning}
+                />
+              </View>
 
-            <GlassCard style={styles.inputCard}>
-              <Text style={typography.eyebrow}>What were you thinking of?</Text>
-              {submitted ? (
-                <View style={styles.submittedRow}>
-                  <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-                  <Text style={styles.submittedText}>
-                    Case added to investigation database.
-                  </Text>
-                </View>
-              ) : (
-                <>
-                  <TextInput
-                    value={subjectInput}
-                    onChangeText={setSubjectInput}
-                    placeholder="Type the subject here"
-                    placeholderTextColor={colors.textTertiary}
-                    style={styles.input}
-                    accessibilityLabel="What were you thinking of?"
-                  />
-                  <SecondaryButton
-                    label="SUBMIT CASE"
-                    icon="send"
-                    onPress={handleSubmitPlayerCase}
-                    disabled={!subjectInput.trim()}
-                    style={styles.submitButton}
-                  />
-                </>
-              )}
-            </GlassCard>
-          </>
-        )}
+              <GlassCard style={styles.inputCard}>
+                <Text style={typography.eyebrow}>What were you thinking of?</Text>
+                {submitted ? (
+                  <View style={styles.submittedRow}>
+                    <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                    <Text style={styles.submittedText}>
+                      Case added to investigation database.
+                    </Text>
+                  </View>
+                ) : (
+                  <>
+                    <TextInput
+                      value={subjectInput}
+                      onChangeText={setSubjectInput}
+                      placeholder="Type the subject here"
+                      placeholderTextColor={colors.textTertiary}
+                      style={styles.input}
+                      accessibilityLabel="What were you thinking of?"
+                    />
+                    <SecondaryButton
+                      label="SUBMIT CASE"
+                      icon="send"
+                      onPress={handleSubmitPlayerCase}
+                      disabled={!subjectInput.trim()}
+                      style={styles.submitButton}
+                    />
+                  </>
+                )}
+              </GlassCard>
+            </>
+          )}
+        </ViewShot>
 
         <View style={{ marginTop: spacing.lg, width: '100%' }}>
           <SecondaryButton
@@ -207,6 +231,11 @@ const useStyles = (colors: any, gradients: any) => StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.huge,
     alignItems: 'center',
+  },
+  shareCard: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
   },
   coreWrap: {
     marginBottom: spacing.lg,
