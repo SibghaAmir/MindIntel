@@ -18,6 +18,7 @@ class GameState(BaseModel):
     current_question: Optional[str] = None
     guess: Optional[str] = None
     reason: Optional[str] = None
+    target_entity: Optional[str] = None
 
 class CreateGameRequest(BaseModel):
     category: str

@@ -4,6 +4,7 @@ from uuid import UUID
 from app.models.game_state import games_db
 from app.schemas.game import GameState, CreateGameRequest, AnswerRequest, ConfirmGuessRequest
 from app.ai.graph import app_graph
+from app.ai.reverse_graph import reverse_graph
 
 def extract_game_state(graph_state: dict) -> GameState:
     kwargs = {k: v for k, v in graph_state.items() if k not in ['pending_answer', 'pending_confirmation']}
@@ -11,6 +12,17 @@ def extract_game_state(graph_state: dict) -> GameState:
     if isinstance(kwargs.get('game_id'), str):
         kwargs['game_id'] = UUID(kwargs['game_id'])
     return GameState(**kwargs)
+
+def get_graph_for_game(game_id: UUID) -> object:
+    game = games_db.get(game_id)
+    if game and game.mode == "reverse":
+        return reverse_graph
+    return app_graph
+
+def get_graph_for_mode(mode: str) -> object:
+    if mode == "reverse":
+        return reverse_graph
+    return app_graph
 
 def create_game(request: CreateGameRequest) -> GameState:
     game_id = uuid.uuid4()
@@ -37,13 +49,14 @@ def create_game(request: CreateGameRequest) -> GameState:
         "current_question": None,
         "guess": None,
         "reason": None,
+        "target_entity": None,
         "pending_answer": None,
         "pending_confirmation": None
     }
     
     config = {"configurable": {"thread_id": str(game_id)}}
-    # Run the graph until the first interrupt (which will be before process_answer)
-    result = app_graph.invoke(initial_state, config)
+    graph = get_graph_for_mode(request.mode)
+    result = graph.invoke(initial_state, config)
     
     game = extract_game_state(result)
     games_db[game_id] = game
@@ -57,12 +70,10 @@ def process_answer(game_id: UUID, request: AnswerRequest) -> Optional[GameState]
         return None
         
     config = {"configurable": {"thread_id": str(game_id)}}
+    graph = get_graph_for_game(game_id)
     
-    # Update the graph state with the user's answer
-    app_graph.update_state(config, {"pending_answer": request.answer})
-    
-    # Resume the graph
-    result = app_graph.invoke(None, config)
+    graph.update_state(config, {"pending_answer": request.answer})
+    result = graph.invoke(None, config)
     
     game = extract_game_state(result)
     games_db[game_id] = game
@@ -73,12 +84,10 @@ def process_guess_confirmation(game_id: UUID, request: ConfirmGuessRequest) -> O
         return None
         
     config = {"configurable": {"thread_id": str(game_id)}}
+    graph = get_graph_for_game(game_id)
     
-    # Update the graph state with the confirmation
-    app_graph.update_state(config, {"pending_confirmation": request.correct})
-    
-    # Resume the graph
-    result = app_graph.invoke(None, config)
+    graph.update_state(config, {"pending_confirmation": request.correct})
+    result = graph.invoke(None, config)
     
     game = extract_game_state(result)
     games_db[game_id] = game
@@ -89,12 +98,10 @@ def process_force_guess(game_id: UUID) -> Optional[GameState]:
         return None
         
     config = {"configurable": {"thread_id": str(game_id)}}
+    graph = get_graph_for_game(game_id)
     
-    # Update the graph state to trigger a forced guess and skip the pending answer
-    app_graph.update_state(config, {"force_guess": True, "pending_answer": None})
-    
-    # Resume the graph
-    result = app_graph.invoke(None, config)
+    graph.update_state(config, {"force_guess": True, "pending_answer": None})
+    result = graph.invoke(None, config)
     
     game = extract_game_state(result)
     games_db[game_id] = game
