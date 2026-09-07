@@ -5,9 +5,9 @@ export type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 export type CaseCategoryId = string;
 
-export type InvestigationMode = 'standard' | 'rapid';
+export type InvestigationMode = 'standard' | 'rapid' | 'reverse';
 
-export type AnswerValue = 'yes' | 'no' | 'maybe' | 'unknown';
+export type AnswerValue = 'yes' | 'no' | 'maybe' | 'unknown' | string;
 
 export type GameStatus =
   | 'idle'

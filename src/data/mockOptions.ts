@@ -36,4 +36,10 @@ export const MODE_OPTIONS: ModeOption[] = [
     subtitle: 'Rapid Investigation',
     questionCount: 10,
   },
+  {
+    id: 'reverse',
+    title: 'Reverse Investigation',
+    subtitle: 'You ask the questions!',
+    questionCount: 20,
+  },
 ];

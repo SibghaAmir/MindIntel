@@ -19,11 +19,13 @@ export default function ResultScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles(colors, gradients);
 
-  const { status, guess, questionNumber, maxQuestions, caseNumber, category, resetGame } =
+  const { status, guess, questionNumber, maxQuestions, caseNumber, category, resetGame, mode } =
     useGameStore();
   const addCase = useCasesStore((s) => s.addCase);
 
-  const isAiWin = status === 'won';
+  const isAiWin = mode === 'reverse' ? status === 'lost' : status === 'won';
+  const playerWon = mode === 'reverse' ? status === 'won' : status === 'lost';
+
   const [subjectInput, setSubjectInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [scanVisible, setScanVisible] = useState(false);
@@ -87,10 +89,16 @@ export default function ResultScreen() {
             UTI: 'public.jpeg',
           });
         } else {
-          // Fallback to text
-          const message = isAiWin
-            ? `I just played Kasoti! The AI guessed my subject ('${guess?.name}') with ${guess?.confidence}% confidence in only ${questionNumber} questions! Can you beat it?`
-            : `I just outsmarted the Kasoti AI! It couldn't guess my subject even after ${maxQuestions} questions! Can you beat my record?`;
+          let message = '';
+          if (mode === 'reverse') {
+            message = isAiWin
+              ? `I just played Reverse Kasoti! The AI stumped me with '${guess?.name}' after ${maxQuestions} questions! Can you beat it?`
+              : `I just beat Reverse Kasoti! I guessed the AI's secret subject ('${guess?.name}') in only ${questionNumber} questions!`;
+          } else {
+            message = isAiWin
+              ? `I just played Kasoti! The AI guessed my subject ('${guess?.name}') with ${guess?.confidence}% confidence in only ${questionNumber} questions! Can you beat it?`
+              : `I just outsmarted the Kasoti AI! It couldn't guess my subject even after ${maxQuestions} questions! Can you beat my record?`;
+          }
           
           await Share.share({
             message,
@@ -117,8 +125,8 @@ export default function ResultScreen() {
 
           {isAiWin ? (
             <>
-              <Text style={styles.headline}>CASE CLOSED</Text>
-              <Text style={styles.subheadline}>Subject Identified</Text>
+              <Text style={styles.headline}>{mode === 'reverse' ? 'CASE UNSOLVED' : 'CASE CLOSED'}</Text>
+              <Text style={styles.subheadline}>{mode === 'reverse' ? 'You Ran Out of Questions' : 'Subject Identified'}</Text>
 
               <View style={styles.statsRow}>
                 <StatCard
@@ -127,64 +135,86 @@ export default function ResultScreen() {
                   icon="help-circle-outline"
                   accentColor={colors.glowBlue}
                 />
-                <StatCard
-                  label="AI Confidence"
-                  value={`${guess?.confidence ?? 0}%`}
-                  icon="analytics-outline"
-                  accentColor={colors.electricViolet}
-                />
+                {mode !== 'reverse' && (
+                  <StatCard
+                    label="AI Confidence"
+                    value={`${guess?.confidence ?? 0}%`}
+                    icon="analytics-outline"
+                    accentColor={colors.electricViolet}
+                  />
+                )}
               </View>
-              <StatCard
-                label="Investigation Score"
-                value={score}
-                icon="trophy-outline"
-                accentColor={colors.success}
-                style={styles.scoreCard}
-              />
+              {mode !== 'reverse' ? (
+                <StatCard
+                  label="Investigation Score"
+                  value={score}
+                  icon="trophy-outline"
+                  accentColor={colors.success}
+                  style={styles.scoreCard}
+                />
+              ) : (
+                <StatCard
+                  label="Secret Subject"
+                  value={guess?.name || 'Unknown'}
+                  icon="person-outline"
+                  accentColor={colors.danger}
+                  style={styles.scoreCard}
+                />
+              )}
             </>
           ) : (
             <>
-              <Text style={styles.headline}>CASE UNSOLVED</Text>
-              <Text style={styles.subheadline}>You Outsmarted the AI</Text>
+              <Text style={styles.headline}>{mode === 'reverse' ? 'CASE CLOSED' : 'CASE UNSOLVED'}</Text>
+              <Text style={styles.subheadline}>{mode === 'reverse' ? 'You Guessed the Secret Subject!' : 'You Outsmarted the AI'}</Text>
 
               <View style={styles.statsRow}>
                 <StatCard
                   label="Questions Used"
-                  value={`${maxQuestions} / ${maxQuestions}`}
+                  value={`${mode === 'reverse' ? questionNumber : maxQuestions} / ${maxQuestions}`}
                   icon="help-circle-outline"
                   accentColor={colors.warning}
                 />
               </View>
 
-              <GlassCard style={styles.inputCard}>
-                <Text style={typography.eyebrow}>What were you thinking of?</Text>
-                {submitted ? (
-                  <View style={styles.submittedRow}>
-                    <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-                    <Text style={styles.submittedText}>
-                      Case added to investigation database.
-                    </Text>
-                  </View>
-                ) : (
-                  <>
-                    <TextInput
-                      value={subjectInput}
-                      onChangeText={setSubjectInput}
-                      placeholder="Type the subject here"
-                      placeholderTextColor={colors.textTertiary}
-                      style={styles.input}
-                      accessibilityLabel="What were you thinking of?"
-                    />
-                    <SecondaryButton
-                      label="SUBMIT CASE"
-                      icon="send"
-                      onPress={handleSubmitPlayerCase}
-                      disabled={!subjectInput.trim()}
-                      style={styles.submitButton}
-                    />
-                  </>
-                )}
-              </GlassCard>
+              {mode !== 'reverse' ? (
+                <GlassCard style={styles.inputCard}>
+                  <Text style={typography.eyebrow}>What were you thinking of?</Text>
+                  {submitted ? (
+                    <View style={styles.submittedRow}>
+                      <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+                      <Text style={styles.submittedText}>
+                        Case added to investigation database.
+                      </Text>
+                    </View>
+                  ) : (
+                    <>
+                      <TextInput
+                        value={subjectInput}
+                        onChangeText={setSubjectInput}
+                        placeholder="Type the subject here"
+                        placeholderTextColor={colors.textTertiary}
+                        style={styles.input}
+                        accessibilityLabel="What were you thinking of?"
+                      />
+                      <SecondaryButton
+                        label="SUBMIT CASE"
+                        icon="send"
+                        onPress={handleSubmitPlayerCase}
+                        disabled={!subjectInput.trim()}
+                        style={styles.submitButton}
+                      />
+                    </>
+                  )}
+                </GlassCard>
+              ) : (
+                <StatCard
+                  label="Secret Subject"
+                  value={guess?.name || 'Unknown'}
+                  icon="person-outline"
+                  accentColor={colors.success}
+                  style={styles.scoreCard}
+                />
+              )}
             </>
           )}
         </ViewShot>

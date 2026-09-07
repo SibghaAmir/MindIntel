@@ -1,6 +1,6 @@
 import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, LayoutAnimation, Platform, UIManager, TextInput } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -75,6 +75,9 @@ export default function InvestigationScreen() {
 
   const {
     caseNumber,
+    mode,
+    questions,
+    answers,
     currentQuestion,
     questionNumber,
     maxQuestions,
@@ -87,10 +90,11 @@ export default function InvestigationScreen() {
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
+  const [reverseInput, setReverseInput] = useState('');
   const isThinking = isAnalyzing; // We use isAnalyzing for the loading state
 
   useEffect(() => {
-    if (status === 'guessing' && !isAnalyzing) {
+    if (status === 'won' || status === 'lost' || (status === 'guessing' && !isAnalyzing)) {
       router.replace('/conclusion');
     }
   }, [status, isAnalyzing]);
@@ -141,16 +145,16 @@ export default function InvestigationScreen() {
           </AnimatedPressable>
         )}
         <InvestigationCard
-          status={isThinking ? 'AI IS ANALYZING...' : 'ANALYZING'}
+          status={isThinking ? (mode === 'reverse' ? 'AI IS THINKING...' : 'AI IS ANALYZING...') : (mode === 'reverse' ? 'YOUR TURN' : 'ANALYZING')}
           message={
             isThinking
               ? "Communicating with backend..."
-              : "I'm narrowing down the possibilities."
+              : (mode === 'reverse' ? "Ask me a Yes/No question, or guess!" : "I'm narrowing down the possibilities.")
           }
           coreState={isThinking ? 'thinking' : coreStateForConfidence(confidence)}
         />
 
-        {timeAttack && (
+        {timeAttack && mode !== 'reverse' && (
           <TimeAttackBar
             active={!isThinking && status === 'playing'}
             onExpire={() => handleAnswer('unknown')}
@@ -158,28 +162,72 @@ export default function InvestigationScreen() {
           />
         )}
 
-        <QuestionCard question={currentQuestion} questionKey={questionNumber} />
+        {mode === 'reverse' ? (
+          <View style={styles.reverseWrap}>
+            {answers.map((qa, i) => (
+              <View key={i} style={styles.reverseQARow}>
+                <Text style={styles.reverseQText}>Q: {qa.question}</Text>
+                <Text style={[styles.reverseAText, qa.answer === 'yes' ? { color: colors.success } : qa.answer === 'no' ? { color: colors.danger } : { color: colors.warning }]}>
+                  A: {String(qa.answer || '').toUpperCase()}
+                </Text>
+              </View>
+            ))}
+            
+            <View style={styles.reverseInputRow}>
+              <import_react_native.TextInput
+                style={[styles.reverseInput, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
+                placeholder="Ask a Yes/No question..."
+                placeholderTextColor={colors.textTertiary}
+                value={reverseInput}
+                onChangeText={setReverseInput}
+                onSubmitEditing={() => {
+                  if (reverseInput.trim()) {
+                    handleAnswer(reverseInput.trim());
+                    setReverseInput('');
+                  }
+                }}
+                editable={!isThinking}
+              />
+              <AnimatedPressable
+                onPress={() => {
+                  if (reverseInput.trim()) {
+                    handleAnswer(reverseInput.trim());
+                    setReverseInput('');
+                  }
+                }}
+                disabled={isThinking || !reverseInput.trim()}
+                style={[styles.reverseSendBtn, { backgroundColor: colors.glowBlue }]}
+              >
+                <Ionicons name="send" size={18} color="#fff" />
+              </AnimatedPressable>
+            </View>
+          </View>
+        ) : (
+          <>
+            <QuestionCard question={currentQuestion} questionKey={questionNumber} />
 
-        <View style={styles.answerGrid}>
-          {ANSWER_LABELS.map((a) => (
-            <AnswerButton
-              key={a.value}
-              value={a.value}
-              label={a.label}
-              onPress={handleAnswer}
-              disabled={isThinking}
-            />
-          ))}
-        </View>
+            <View style={styles.answerGrid}>
+              {ANSWER_LABELS.map((a) => (
+                <AnswerButton
+                  key={a.value}
+                  value={a.value}
+                  label={a.label}
+                  onPress={handleAnswer}
+                  disabled={isThinking}
+                />
+              ))}
+            </View>
 
-        <View style={{ marginTop: spacing.md }}>
-          <SecondaryButton
-            label="FORCE AI TO GUESS NOW"
-            icon="flash"
-            onPress={() => useGameStore.getState().forceGuess()}
-            disabled={isThinking || questionNumber < 3}
-          />
-        </View>
+            <View style={{ marginTop: spacing.md }}>
+              <SecondaryButton
+                label="FORCE AI TO GUESS NOW"
+                icon="flash"
+                onPress={() => useGameStore.getState().forceGuess()}
+                disabled={isThinking || questionNumber < 3}
+              />
+            </View>
+          </>
+        )}
 
         <AnimatedPressable style={styles.expandRow} onPress={toggleExpanded} haptic={false}>
           <Text style={styles.expandLabel}>VIEW INVESTIGATION</Text>
@@ -264,6 +312,47 @@ const useStyles = (colors: any, gradients: any) => StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+  },
+  reverseWrap: {
+    flex: 1,
+  },
+  reverseQARow: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  reverseQText: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  reverseAText: {
+    ...typography.caption,
+    fontWeight: '800',
+  },
+  reverseInputRow: {
+    flexDirection: 'row',
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  reverseInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.card,
+    fontSize: 15,
+  },
+  reverseSendBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   expandRow: {
     flexDirection: 'row',
