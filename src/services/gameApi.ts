@@ -15,6 +15,7 @@ interface BackendGameState {
   current_question: string | null;
   guess: string | null;
   reason: string | null;
+  contradiction: string | null;
 }
 
 // Maps backend schema to our frontend Zustand state shape
@@ -61,6 +62,7 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
     currentQuestion: backend.current_question || '',
     guess,
     snapshot,
+    contradiction: backend.contradiction,
   };
 };
 

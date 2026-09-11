@@ -7,6 +7,8 @@ from app.ai.question_chain import generate_next_question
 from app.ai.guess_chain import generate_guess as generate_guess_chain
 from app.ai.candidate_service import generate_candidates
 
+from app.ai.contradiction_chain import check_for_contradiction
+
 class GraphState(TypedDict):
     game_id: str
     category: str
@@ -23,6 +25,7 @@ class GraphState(TypedDict):
     current_question: Optional[str]
     guess: Optional[str]
     reason: Optional[str]
+    contradiction: Optional[str]
     
     pending_answer: Optional[str]
     pending_confirmation: Optional[bool]
@@ -37,7 +40,7 @@ def retrieve_candidates(state: GraphState) -> dict:
     if not state.get("questions"):
         return {"candidates": []}
         
-    game_kwargs = {k: v for k, v in state.items() if k not in ['pending_answer', 'pending_confirmation']}
+    game_kwargs = {k: v for k, v in state.items() if k not in ['pending_answer', 'pending_confirmation', 'contradiction'] and v is not None}
     game_state = GameState(**game_kwargs)
     candidates = generate_candidates(game_state)
     return {"candidates": candidates}
@@ -57,17 +60,18 @@ def decide_action(state: GraphState) -> str:
     return "generate_question"
 
 def generate_question(state: GraphState) -> dict:
-    game_kwargs = {k: v for k, v in state.items() if k not in ['pending_answer', 'pending_confirmation']}
+    game_kwargs = {k: v for k, v in state.items() if k not in ['pending_answer', 'pending_confirmation', 'contradiction'] and v is not None}
     game_state = GameState(**game_kwargs)
     resp = generate_next_question(game_state)
     return {
         "current_question": resp.question,
         "confidence": resp.confidence,
-        "status": "playing"
+        "status": "playing",
+        "contradiction": None # Clear contradiction on new question
     }
 
 def generate_guess(state: GraphState) -> dict:
-    game_kwargs = {k: v for k, v in state.items() if k not in ['pending_answer', 'pending_confirmation']}
+    game_kwargs = {k: v for k, v in state.items() if k not in ['pending_answer', 'pending_confirmation', 'contradiction'] and v is not None}
     game_state = GameState(**game_kwargs)
     resp = generate_guess_chain(game_state)
     return {
@@ -95,6 +99,22 @@ def process_answer(state: GraphState) -> dict:
         "pending_answer": None
     }
 
+def check_contradiction_node(state: GraphState) -> dict:
+    questions = state.get("questions", [])
+    answers = state.get("answers", [])
+    if not questions or state.get("force_guess"):
+        return {}
+        
+    res = check_for_contradiction(questions, answers)
+    if res.contradiction_found:
+        # Penalize player by adding 2 questions (if won't exceed max, else cap at max)
+        new_q_num = min(state.get("question_number", 0) + 2, state.get("max_questions", 20))
+        return {
+            "contradiction": res.reason,
+            "question_number": new_q_num
+        }
+    return {"contradiction": None}
+
 def process_confirmation(state: GraphState) -> dict:
     correct = state.get("pending_confirmation")
     if correct is None:
@@ -116,6 +136,7 @@ workflow.add_node("retrieve_candidates", retrieve_candidates)
 workflow.add_node("generate_question", generate_question)
 workflow.add_node("generate_guess", generate_guess)
 workflow.add_node("process_answer", process_answer)
+workflow.add_node("check_contradiction", check_contradiction_node)
 workflow.add_node("process_confirmation", process_confirmation)
 workflow.add_node("finish_game", finish_game)
 
@@ -133,7 +154,8 @@ workflow.add_conditional_edges(
 
 # Graph interrupts before processing answers/confirmations (WAIT)
 workflow.add_edge("generate_question", "process_answer")
-workflow.add_edge("process_answer", "analyze_state")
+workflow.add_edge("process_answer", "check_contradiction")
+workflow.add_edge("check_contradiction", "analyze_state")
 
 workflow.add_edge("generate_guess", "process_confirmation")
 workflow.add_edge("process_confirmation", "finish_game")

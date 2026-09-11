@@ -19,6 +19,7 @@ class GameState(BaseModel):
     guess: Optional[str] = None
     reason: Optional[str] = None
     target_entity: Optional[str] = None
+    contradiction: Optional[str] = None
 
 class CreateGameRequest(BaseModel):
     category: str

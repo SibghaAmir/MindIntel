@@ -50,6 +50,7 @@ def create_game(request: CreateGameRequest) -> GameState:
         "guess": None,
         "reason": None,
         "target_entity": None,
+        "contradiction": None,
         "pending_answer": None,
         "pending_confirmation": None
     }

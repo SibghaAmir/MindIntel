@@ -25,6 +25,7 @@ interface GameStore extends GameState {
   submitPlayerAnswer: (subject: string) => void;
   resetGame: () => void;
   clearError: () => void;
+  clearContradiction: () => void;
   
   hint: string | null;
   hintUsed: boolean;
@@ -72,6 +73,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setMode: (mode) => set({ selectedMode: mode }),
 
   clearError: () => set({ apiError: null }),
+  
+  clearContradiction: () => set({ contradiction: null }),
   
   dismissHint: () => set({ hint: null }),
   

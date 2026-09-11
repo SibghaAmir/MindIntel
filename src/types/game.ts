@@ -70,6 +70,7 @@ export interface GameState {
   currentQuestion: string;
   guess: CandidateGuess | null;
   snapshot: InvestigationSnapshot;
+  contradiction?: string | null;
 }
 
 export type CaseResultType = 'ai_victory' | 'player_victory';

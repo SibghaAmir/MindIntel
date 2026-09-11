@@ -90,6 +90,8 @@ export default function InvestigationScreen() {
     hint,
     hintUsed,
     requestHint,
+    contradiction,
+    clearContradiction,
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
@@ -136,6 +138,26 @@ export default function InvestigationScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {contradiction && (
+          <GlassCard style={{ backgroundColor: colors.danger, marginBottom: spacing.md, padding: spacing.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs }}>
+              <Ionicons name="warning" size={20} color={colors.white} style={{ marginRight: 8 }} />
+              <Text style={{ ...typography.h3, color: colors.white }}>CONTRADICTION DETECTED</Text>
+            </View>
+            <Text style={{ ...typography.bodyMedium, color: colors.white, marginBottom: spacing.md }}>
+              {contradiction}
+            </Text>
+            <Text style={{ ...typography.caption, color: colors.white, marginBottom: spacing.md, fontStyle: 'italic' }}>
+              Penalty: 2 Questions Added
+            </Text>
+            <SecondaryButton 
+              label="ACCEPT PENALTY" 
+              icon="checkmark-circle-outline" 
+              onPress={clearContradiction} 
+            />
+          </GlassCard>
+        )}
+
         {apiError && (
           <AnimatedPressable 
             onPress={() => useGameStore.getState().clearError()} 
@@ -228,7 +250,7 @@ export default function InvestigationScreen() {
                   value={a.value}
                   label={a.label}
                   onPress={handleAnswer}
-                  disabled={isThinking}
+                  disabled={isThinking || !!contradiction}
                 />
               ))}
             </View>
