@@ -27,6 +27,12 @@ interface GameStore extends GameState {
   clearError: () => void;
   clearContradiction: () => void;
   
+  gauntlet: { active: boolean; stage: number; cumulativeScore: number };
+  startGauntletStage: () => Promise<void>;
+  startGauntlet: () => Promise<void>;
+  endGauntlet: () => void;
+  incrementGauntletScore: (score: number) => void;
+  
   hint: string | null;
   hintUsed: boolean;
   requestHint: () => Promise<void>;
@@ -67,10 +73,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
   apiError: null,
   hint: null,
   hintUsed: false,
+  gauntlet: { active: false, stage: 1, cumulativeScore: 0 },
 
   setCategory: (category) => set({ selectedCategory: category }),
 
   setMode: (mode) => set({ selectedMode: mode }),
+  
+  startGauntlet: async () => {
+    set({ gauntlet: { active: true, stage: 1, cumulativeScore: 0 } });
+    await get().startGauntletStage();
+  },
+  
+  startGauntletStage: async () => {
+    const stage = get().gauntlet.stage;
+    const settings = useSettingsStore.getState();
+    let mode: InvestigationMode = 'standard';
+    let diff = 'easy';
+    
+    settings.setTimeAttack(false);
+    
+    if (stage === 2) {
+      mode = 'standard';
+      diff = 'normal';
+      settings.setTimeAttack(true);
+    } else if (stage === 3) {
+      mode = 'reverse';
+      diff = 'normal';
+      settings.setTimeAttack(false);
+    }
+    
+    get().setMode(mode);
+    get().setCategory('anything');
+    settings.setDifficulty(diff as any);
+    await get().startInvestigation();
+  },
+  
+  endGauntlet: () => {
+    set({ gauntlet: { active: false, stage: 1, cumulativeScore: 0 } });
+  },
+  
+  incrementGauntletScore: (score: number) => {
+    const { gauntlet } = get();
+    set({ gauntlet: { ...gauntlet, cumulativeScore: gauntlet.cumulativeScore + score, stage: gauntlet.stage + 1 } });
+  },
 
   clearError: () => set({ apiError: null }),
   
@@ -199,5 +244,5 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ status: 'lost' });
   },
 
-  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null, hint: null, hintUsed: false }),
+  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null, hint: null, hintUsed: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } }),
 }));

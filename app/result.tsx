@@ -19,7 +19,7 @@ export default function ResultScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles(colors, gradients);
 
-  const { status, guess, questionNumber, maxQuestions, caseNumber, category, resetGame, mode } =
+  const { status, guess, questionNumber, maxQuestions, caseNumber, category, resetGame, mode, gauntlet, incrementGauntletScore, startGauntletStage, endGauntlet } =
     useGameStore();
   const addCase = useCasesStore((s) => s.addCase);
 
@@ -125,8 +125,12 @@ export default function ResultScreen() {
 
           {isAiWin ? (
             <>
-              <Text style={styles.headline}>{mode === 'reverse' ? 'CASE UNSOLVED' : 'CASE CLOSED'}</Text>
-              <Text style={styles.subheadline}>{mode === 'reverse' ? 'You Ran Out of Questions' : 'Subject Identified'}</Text>
+              <Text style={styles.headline}>
+                {gauntlet.active ? 'GAUNTLET FAILED' : (mode === 'reverse' ? 'CASE UNSOLVED' : 'CASE CLOSED')}
+              </Text>
+              <Text style={styles.subheadline}>
+                {gauntlet.active ? 'You were defeated' : (mode === 'reverse' ? 'You Ran Out of Questions' : 'Subject Identified')}
+              </Text>
 
               <View style={styles.statsRow}>
                 <StatCard
@@ -164,8 +168,12 @@ export default function ResultScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.headline}>{mode === 'reverse' ? 'CASE CLOSED' : 'CASE UNSOLVED'}</Text>
-              <Text style={styles.subheadline}>{mode === 'reverse' ? 'You Guessed the Secret Subject!' : 'You Outsmarted the AI'}</Text>
+              <Text style={styles.headline}>
+                {gauntlet.active ? (gauntlet.stage === 3 ? 'GAUNTLET COMPLETE' : `STAGE ${gauntlet.stage} CLEARED`) : (mode === 'reverse' ? 'CASE CLOSED' : 'CASE UNSOLVED')}
+              </Text>
+              <Text style={styles.subheadline}>
+                {gauntlet.active ? 'You survived the interrogation!' : (mode === 'reverse' ? 'You Guessed the Secret Subject!' : 'You Outsmarted the AI')}
+              </Text>
 
               <View style={styles.statsRow}>
                 <StatCard
@@ -176,7 +184,7 @@ export default function ResultScreen() {
                 />
               </View>
 
-              {mode !== 'reverse' ? (
+              {mode !== 'reverse' && !gauntlet.active ? (
                 <GlassCard style={styles.inputCard}>
                   <Text style={typography.eyebrow}>What were you thinking of?</Text>
                   {submitted ? (
@@ -206,7 +214,7 @@ export default function ResultScreen() {
                     </>
                   )}
                 </GlassCard>
-              ) : (
+              ) : (mode === 'reverse' && (
                 <StatCard
                   label="Secret Subject"
                   value={guess?.name || 'Unknown'}
@@ -214,7 +222,7 @@ export default function ResultScreen() {
                   accentColor={colors.success}
                   style={styles.scoreCard}
                 />
-              )}
+              ))}
             </>
           )}
         </ViewShot>
@@ -229,7 +237,45 @@ export default function ResultScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <PrimaryButton label="NEW CASE" icon="add-circle" onPress={handleNewCase} />
+        {gauntlet.active ? (
+          playerWon && gauntlet.stage < 3 ? (
+            <PrimaryButton 
+              label="NEXT STAGE" 
+              icon="arrow-forward-circle" 
+              onPress={() => {
+                incrementGauntletScore(score);
+                startGauntletStage();
+                router.replace('/investigation');
+              }} 
+            />
+          ) : (
+            <PrimaryButton 
+              label={playerWon ? "CLAIM TITLE" : "BACK TO HOME"} 
+              icon={playerWon ? "trophy" : "home"} 
+              onPress={() => {
+                if (playerWon) incrementGauntletScore(score); // Add final score if they won stage 3
+                const record: CaseRecord = {
+                  id: `gauntlet-${Date.now()}`,
+                  caseNumber,
+                  subject: 'Gauntlet Run',
+                  category: 'anything',
+                  questionsUsed: questionNumber,
+                  maxQuestions,
+                  result: playerWon ? 'player_victory' : 'ai_victory',
+                  confidence: 0,
+                  score: gauntlet.cumulativeScore + (playerWon ? score : 0),
+                  date: new Date().toISOString().slice(0, 10),
+                };
+                addCase(record);
+                endGauntlet();
+                resetGame();
+                router.replace('/(tabs)');
+              }} 
+            />
+          )
+        ) : (
+          <PrimaryButton label="NEW CASE" icon="add-circle" onPress={handleNewCase} />
+        )}
         <View style={styles.buttonRow}>
           <SecondaryButton
             label="SHARE"

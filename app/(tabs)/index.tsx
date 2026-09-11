@@ -51,6 +51,15 @@ export default function HomeScreen() {
           <View style={styles.ctaGroup}>
             <PrimaryButton label="CREATE NEW CASE" icon="add-circle" onPress={handleNewCase} />
             <SecondaryButton
+              label="ENTER THE GAUNTLET"
+              icon="trophy-outline"
+              onPress={() => {
+                useGameStore.getState().startGauntlet();
+                router.push('/investigation');
+              }}
+              style={styles.secondaryGap}
+            />
+            <SecondaryButton
               label="HOW TO PLAY"
               icon="help-circle-outline"
               onPress={() => router.push('/how-to-play')}
