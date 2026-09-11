@@ -106,3 +106,11 @@ def process_force_guess(game_id: UUID) -> Optional[GameState]:
     game = extract_game_state(result)
     games_db[game_id] = game
     return game
+
+from app.ai.hint_chain import generate_hint
+
+def get_game_hint(game_id: UUID) -> Optional[str]:
+    game = games_db.get(game_id)
+    if not game:
+        return None
+    return generate_hint(game)

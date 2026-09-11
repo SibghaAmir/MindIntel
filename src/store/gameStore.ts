@@ -25,6 +25,11 @@ interface GameStore extends GameState {
   submitPlayerAnswer: (subject: string) => void;
   resetGame: () => void;
   clearError: () => void;
+  
+  hint: string | null;
+  hintUsed: boolean;
+  requestHint: () => Promise<void>;
+  dismissHint: () => void;
 }
 
 let caseCounter = 26;
@@ -59,12 +64,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedMode: 'standard',
   isAnalyzing: false,
   apiError: null,
+  hint: null,
+  hintUsed: false,
 
   setCategory: (category) => set({ selectedCategory: category }),
 
   setMode: (mode) => set({ selectedMode: mode }),
 
   clearError: () => set({ apiError: null }),
+  
+  dismissHint: () => set({ hint: null }),
+  
+  requestHint: async () => {
+    const state = get();
+    if (state.status !== 'playing' || !state.gameId || state.hintUsed) return;
+    
+    set({ isAnalyzing: true, apiError: null });
+    try {
+      const res = await gameApi.getHint(state.gameId);
+      set({ hint: res.hint, hintUsed: true, isAnalyzing: false });
+    } catch (error: any) {
+      set({ apiError: error.message || 'Failed to get hint.', isAnalyzing: false });
+    }
+  },
 
   startInvestigation: async () => {
     const { selectedCategory, selectedMode } = get();
@@ -72,7 +94,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { difficulty, personality } = useSettingsStore.getState();
     caseCounter += 1;
 
-    set({ isAnalyzing: true, apiError: null, status: 'thinking' });
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false });
 
     try {
       const newState = await gameApi.createGame(category, selectedMode, difficulty, personality);
@@ -174,5 +196,5 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ status: 'lost' });
   },
 
-  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null }),
+  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null, hint: null, hintUsed: false }),
 }));

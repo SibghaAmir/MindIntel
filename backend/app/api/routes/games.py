@@ -36,6 +36,12 @@ def force_guess_endpoint(game_id: UUID):
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
+@router.get("/{game_id}/hint")
+def get_hint_endpoint(game_id: UUID):
+    hint = game_service.get_game_hint(game_id)
+    if not hint:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return {"hint": hint}
 
 from pydantic import BaseModel
 class LearnRequest(BaseModel):

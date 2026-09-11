@@ -101,5 +101,11 @@ export const gameApi = {
       method: 'POST',
       body: JSON.stringify({ subject, category }),
     });
+  },
+
+  getHint: async (gameId: string): Promise<{ hint: string }> => {
+    return fetchApi<{ hint: string }>(`/games/${gameId}/hint`, {
+      method: 'GET',
+    });
   }
 };

@@ -87,6 +87,9 @@ export default function InvestigationScreen() {
     isAnalyzing,
     apiError,
     answerQuestion,
+    hint,
+    hintUsed,
+    requestHint,
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
@@ -206,6 +209,18 @@ export default function InvestigationScreen() {
           <>
             <QuestionCard question={currentQuestion} questionKey={questionNumber} />
 
+            {hint && (
+              <GlassCard style={styles.hintCard} secondary>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs }}>
+                  <Ionicons name="bulb-outline" size={16} color={colors.warning} style={{ marginRight: 4 }} />
+                  <Text style={typography.eyebrow}>AI Interrogation Logic</Text>
+                </View>
+                <Text style={{ ...typography.bodyMedium, color: colors.textSecondary }}>
+                  {hint}
+                </Text>
+              </GlassCard>
+            )}
+
             <View style={styles.answerGrid}>
               {ANSWER_LABELS.map((a) => (
                 <AnswerButton
@@ -218,13 +233,25 @@ export default function InvestigationScreen() {
               ))}
             </View>
 
-            <View style={{ marginTop: spacing.md }}>
-              <SecondaryButton
-                label="FORCE AI TO GUESS NOW"
-                icon="flash"
-                onPress={() => useGameStore.getState().forceGuess()}
-                disabled={isThinking || questionNumber < 3}
-              />
+            <View style={{ marginTop: spacing.md, flexDirection: 'row', gap: spacing.sm }}>
+              <View style={{ flex: 1 }}>
+                <SecondaryButton
+                  label="FORCE AI TO GUESS NOW"
+                  icon="flash"
+                  onPress={() => useGameStore.getState().forceGuess()}
+                  disabled={isThinking || questionNumber < 3}
+                />
+              </View>
+              {!hintUsed && (
+                <View style={{ flex: 1 }}>
+                  <SecondaryButton
+                    label="INTERROGATE AI"
+                    icon="bulb-outline"
+                    onPress={requestHint}
+                    disabled={isThinking}
+                  />
+                </View>
+              )}
             </View>
           </>
         )}
@@ -312,6 +339,10 @@ const useStyles = (colors: any, gradients: any) => StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+  },
+  hintCard: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
   },
   reverseWrap: {
     flex: 1,
