@@ -15,6 +15,7 @@ import {
   QuestionCard,
   CandidateCard,
   SecondaryButton,
+  SuspectCard,
 } from '@/src/components';
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
@@ -92,6 +93,7 @@ export default function InvestigationScreen() {
     requestHint,
     contradiction,
     clearContradiction,
+    evidenceBoard = [],
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
@@ -315,10 +317,19 @@ export default function InvestigationScreen() {
               showValue={false}
             />
 
-            <Text style={[styles.dataSubheading, { marginTop: spacing.sm }]}>Top Possibilities</Text>
-            {snapshot.topPossibilities.map((name, i) => (
-              <CandidateCard key={name} rank={i + 1} name={name} />
-            ))}
+            <Text style={[styles.dataSubheading, { marginTop: spacing.sm }]}>Evidence Board</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {evidenceBoard.map((item) => (
+                <View key={item.id} style={{ width: '33%' }}>
+                  <SuspectCard name={item.name} status={item.status} />
+                </View>
+              ))}
+              {evidenceBoard.length === 0 && (
+                <Text style={{ ...typography.caption, color: colors.textTertiary, paddingVertical: spacing.md }}>
+                  Awaiting suspect data...
+                </Text>
+              )}
+            </View>
           </GlassCard>
         )}
       </ScrollView>

@@ -65,6 +65,7 @@ function initialState(): GameState {
       topPossibilities: [],
       categoryBreakdown: [],
     },
+    evidenceBoard: [],
   };
 }
 
@@ -150,10 +151,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const newState = await gameApi.createGame(category, selectedMode, difficulty, personality);
+      
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      const updatedBoard = newPossibilities.slice(0, 9).map((p, i) => ({
+        id: `suspect-init-${i}-${p}`,
+        name: p,
+        status: 'active' as const
+      }));
+
       set({
         ...newState,
         caseNumber: caseCounter,
         isAnalyzing: false,
+        evidenceBoard: updatedBoard
       });
     } catch (error: any) {
       set({
@@ -171,10 +181,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       const newState = await gameApi.createDailyGame();
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      const updatedBoard = newPossibilities.slice(0, 9).map((p, i) => ({
+        id: `suspect-init-${i}-${p}`,
+        name: p,
+        status: 'active' as const
+      }));
+
       set({
         ...newState,
         caseNumber: caseCounter,
         isAnalyzing: false,
+        evidenceBoard: updatedBoard
       });
     } catch (error: any) {
       set({
@@ -207,7 +225,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       audioManager.stopThinking();
-      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
+      
+      const currentBoard = state.evidenceBoard || [];
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      let updatedBoard = [...currentBoard];
+      
+      // Mark existing as eliminated if not in new topPossibilities
+      updatedBoard = updatedBoard.map(item => {
+        if (item.status === 'active' && !newPossibilities.includes(item.name)) {
+          return { ...item, status: 'eliminated' };
+        }
+        return item;
+      });
+      
+      // Add new suspects up to 9
+      const maxSuspects = 9;
+      for (const p of newPossibilities) {
+        if (updatedBoard.length >= maxSuspects) break;
+        if (!updatedBoard.some(item => item.name === p)) {
+          updatedBoard.push({ id: `suspect-${Date.now()}-${p}`, name: p, status: 'active' });
+        }
+      }
+
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false, evidenceBoard: updatedBoard });
     } catch (error: any) {
       audioManager.stopThinking();
       set({ apiError: error.message || 'Failed to submit answer.', isAnalyzing: false, status: 'playing' });

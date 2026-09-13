@@ -49,10 +49,16 @@ export interface CategoryBreakdownItem {
 }
 
 export interface InvestigationSnapshot {
-  categoryBreakdown: CategoryBreakdownItem[];
-  candidatesRemaining: number;
   aiConfidence: number;
+  candidatesRemaining: number;
   topPossibilities: string[];
+  categoryBreakdown: { label: string; percentage: number }[];
+}
+
+export interface EvidenceBoardItem {
+  id: string;
+  name: string;
+  status: 'active' | 'eliminated';
 }
 
 export interface GameState {
@@ -72,6 +78,7 @@ export interface GameState {
   snapshot: InvestigationSnapshot;
   contradiction?: string | null;
   isDaily?: boolean;
+  evidenceBoard?: EvidenceBoardItem[];
 }
 
 export type CaseResultType = 'ai_victory' | 'player_victory';
