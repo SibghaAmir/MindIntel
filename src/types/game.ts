@@ -71,6 +71,7 @@ export interface GameState {
   guess: CandidateGuess | null;
   snapshot: InvestigationSnapshot;
   contradiction?: string | null;
+  isDaily?: boolean;
 }
 
 export type CaseResultType = 'ai_victory' | 'player_victory';

@@ -78,7 +78,7 @@ export default function ResultScreen() {
 
   const handleShare = async () => {
     try {
-      if (viewShotRef.current && viewShotRef.current.capture) {
+      if (viewShotRef.current && viewShotRef.current.capture && !useGameStore.getState().isDaily) {
         const uri = await viewShotRef.current.capture();
         const isAvailable = await Sharing.isAvailableAsync();
         
@@ -88,24 +88,35 @@ export default function ResultScreen() {
             dialogTitle: 'Share your Kasoti result!',
             UTI: 'public.jpeg',
           });
-        } else {
-          let message = '';
-          if (mode === 'reverse') {
-            message = isAiWin
-              ? `I just played Reverse Kasoti! The AI stumped me with '${guess?.name}' after ${maxQuestions} questions! Can you beat it?`
-              : `I just beat Reverse Kasoti! I guessed the AI's secret subject ('${guess?.name}') in only ${questionNumber} questions!`;
-          } else {
-            message = isAiWin
-              ? `I just played Kasoti! The AI guessed my subject ('${guess?.name}') with ${guess?.confidence}% confidence in only ${questionNumber} questions! Can you beat it?`
-              : `I just outsmarted the Kasoti AI! It couldn't guess my subject even after ${maxQuestions} questions! Can you beat my record?`;
-          }
-          
-          await Share.share({
-            message,
-            title: 'MindIntel Kasoti AI',
-          });
+          return;
         }
       }
+
+      let message = '';
+      if (useGameStore.getState().isDaily) {
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const grid = useGameStore.getState().answers.map(qa => {
+          if (qa.answer === 'yes') return '🟩';
+          if (qa.answer === 'no') return '🟥';
+          if (qa.answer === 'maybe') return '🟨';
+          return '⬛';
+        }).join('');
+        const winStr = playerWon ? questionNumber : 'X';
+        message = `Kasoti Daily Cipher (${dateStr})\n${winStr}/${maxQuestions}\n\n${grid}\n\nCan you crack the cipher?`;
+      } else if (mode === 'reverse') {
+        message = isAiWin
+          ? `I just played Reverse Kasoti! The AI stumped me with '${guess?.name}' after ${maxQuestions} questions! Can you beat it?`
+          : `I just beat Reverse Kasoti! I guessed the AI's secret subject ('${guess?.name}') in only ${questionNumber} questions!`;
+      } else {
+        message = isAiWin
+          ? `I just played Kasoti! The AI guessed my subject ('${guess?.name}') with ${guess?.confidence}% confidence in only ${questionNumber} questions! Can you beat it?`
+          : `I just outsmarted the Kasoti AI! It couldn't guess my subject even after ${maxQuestions} questions! Can you beat my record?`;
+      }
+      
+      await Share.share({
+        message,
+        title: 'MindIntel Kasoti AI',
+      });
     } catch (error) {
       console.log('Error sharing', error);
     }

@@ -9,6 +9,10 @@ router = APIRouter()
 def create_game_endpoint(request: CreateGameRequest):
     return game_service.create_game(request)
 
+@router.post("/daily", response_model=GameState)
+def create_daily_game_endpoint():
+    return game_service.create_daily_game()
+
 @router.get("/{game_id}", response_model=GameState)
 def get_game_endpoint(game_id: UUID):
     game = game_service.get_game(game_id)

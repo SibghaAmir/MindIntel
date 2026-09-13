@@ -51,12 +51,54 @@ def create_game(request: CreateGameRequest) -> GameState:
         "reason": None,
         "target_entity": None,
         "contradiction": None,
+        "is_daily": False,
         "pending_answer": None,
         "pending_confirmation": None
     }
     
     config = {"configurable": {"thread_id": str(game_id)}}
     graph = get_graph_for_mode(request.mode)
+    result = graph.invoke(initial_state, config)
+    
+    game = extract_game_state(result)
+    games_db[game_id] = game
+    return game
+
+import hashlib
+from datetime import date
+from app.ai.kb.data import SAMPLE_ENTITIES
+
+def create_daily_game() -> GameState:
+    game_id = uuid.uuid4()
+    today_str = date.today().isoformat()
+    hash_val = int(hashlib.md5(today_str.encode()).hexdigest(), 16)
+    target = SAMPLE_ENTITIES[hash_val % len(SAMPLE_ENTITIES)]
+    
+    initial_state = {
+        "game_id": str(game_id),
+        "category": target.get("category", "anything"),
+        "mode": "reverse",
+        "difficulty": "normal",
+        "personality": "clinical",
+        "max_questions": 20,
+        "question_number": 0,
+        "status": "playing",
+        "confidence": 0,
+        "questions": [],
+        "answers": [],
+        "candidates": [],
+        "current_question": None,
+        "guess": None,
+        "reason": None,
+        "target_entity": target["name"],
+        "contradiction": None,
+        "is_daily": True,
+        "pending_answer": None,
+        "pending_confirmation": None
+    }
+    
+    config = {"configurable": {"thread_id": str(game_id)}}
+    graph = get_graph_for_mode("reverse")
     result = graph.invoke(initial_state, config)
     
     game = extract_game_state(result)

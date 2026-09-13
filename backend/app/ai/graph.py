@@ -26,6 +26,7 @@ class GraphState(TypedDict):
     guess: Optional[str]
     reason: Optional[str]
     contradiction: Optional[str]
+    is_daily: Optional[bool]
     
     pending_answer: Optional[str]
     pending_confirmation: Optional[bool]

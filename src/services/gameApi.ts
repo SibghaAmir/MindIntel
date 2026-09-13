@@ -16,6 +16,7 @@ interface BackendGameState {
   guess: string | null;
   reason: string | null;
   contradiction: string | null;
+  is_daily: boolean;
 }
 
 // Maps backend schema to our frontend Zustand state shape
@@ -63,19 +64,27 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
     guess,
     snapshot,
     contradiction: backend.contradiction,
+    isDaily: backend.is_daily,
   };
 };
 
 export const gameApi = {
   createGame: async (category: string, mode: string, difficulty: string, personality: string): Promise<GameState> => {
-    const data = await fetchApi<BackendGameState>('/games', {
+    const backendState = await fetchApi<BackendGameState>('/games', {
       method: 'POST',
       body: JSON.stringify({ category, mode, difficulty, personality }),
     });
-    return mapBackendStateToFrontend(data);
+    return mapBackendStateToFrontend(backendState);
   },
 
-  submitAnswer: async (gameId: string, answer: string): Promise<GameState> => {
+  createDailyGame: async (): Promise<GameState> => {
+    const backendState = await fetchApi<BackendGameState>('/games/daily', {
+      method: 'POST',
+    });
+    return mapBackendStateToFrontend(backendState);
+  },
+
+  submitAnswer: async (gameId: string, answer: AnswerValue): Promise<GameState> => {
     const data = await fetchApi<BackendGameState>(`/games/${gameId}/answers`, {
       method: 'POST',
       body: JSON.stringify({ answer }),

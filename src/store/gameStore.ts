@@ -37,6 +37,9 @@ interface GameStore extends GameState {
   hintUsed: boolean;
   requestHint: () => Promise<void>;
   dismissHint: () => void;
+  
+  isDaily: boolean;
+  startDailyCipher: () => Promise<void>;
 }
 
 let caseCounter = 26;
@@ -73,6 +76,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   apiError: null,
   hint: null,
   hintUsed: false,
+  isDaily: false,
   gauntlet: { active: false, stage: 1, cumulativeScore: 0 },
 
   setCategory: (category) => set({ selectedCategory: category }),
@@ -138,11 +142,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startInvestigation: async () => {
     const { selectedCategory, selectedMode } = get();
-    const category: CaseCategoryId = selectedCategory ?? 'anything';
+    const category = selectedCategory || 'anything';
     const { difficulty, personality } = useSettingsStore.getState();
     caseCounter += 1;
 
-    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false });
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false, isDaily: false });
 
     try {
       const newState = await gameApi.createGame(category, selectedMode, difficulty, personality);
@@ -152,7 +156,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
         isAnalyzing: false,
       });
     } catch (error: any) {
-      set({ apiError: error.message || 'Failed to start game.', isAnalyzing: false, status: 'idle' });
+      set({
+        apiError: error.message || 'Failed to start game.',
+        isAnalyzing: false,
+      });
+    }
+  },
+  
+  startDailyCipher: async () => {
+    caseCounter += 1;
+    useSettingsStore.getState().setTimeAttack(false); // Disable time attack for daily
+    
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false, isDaily: true, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } });
+
+    try {
+      const newState = await gameApi.createDailyGame();
+      set({
+        ...newState,
+        caseNumber: caseCounter,
+        isAnalyzing: false,
+      });
+    } catch (error: any) {
+      set({
+        apiError: error.message || 'Failed to start daily case.',
+        isAnalyzing: false,
+      });
     }
   },
 
@@ -244,5 +272,5 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ status: 'lost' });
   },
 
-  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null, hint: null, hintUsed: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } }),
+  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null, hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } }),
 }));

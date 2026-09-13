@@ -20,6 +20,7 @@ class GameState(BaseModel):
     reason: Optional[str] = None
     target_entity: Optional[str] = None
     contradiction: Optional[str] = None
+    is_daily: bool = False
 
 class CreateGameRequest(BaseModel):
     category: str
