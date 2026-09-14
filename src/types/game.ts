@@ -79,6 +79,7 @@ export interface GameState {
   contradiction?: string | null;
   isDaily?: boolean;
   evidenceBoard?: EvidenceBoardItem[];
+  personality?: string;
 }
 
 export type CaseResultType = 'ai_victory' | 'player_victory';

@@ -14,10 +14,10 @@ def format_history(game: GameState) -> str:
     return "\n".join(history_lines)
 
 def get_personality_prompt(personality: str) -> str:
-    if personality == "sarcastic":
-        return "Your personality is a Sarcastic Robot. You are extremely intelligent but easily bored by humans. Your questions should occasionally have a dry, cynical, or sarcastic tone."
-    elif personality == "aggressive":
-        return "Your personality is an Aggressive Interrogator. You treat this game like a high-stakes police interrogation. Your questions should be blunt, demanding, and intense."
+    if personality == "bad_cop":
+        return "Your personality is a 'Bad Cop'. You treat this game like a high-stakes police interrogation. Your questions should be blunt, demanding, aggressive, and intense."
+    elif personality == "noir":
+        return "Your personality is a 1940s hardboiled Noir Detective. Use gritty detective slang (e.g., 'Listen here, kid', 'dames', 'copper'). Frame your questions like a cynical private eye."
     else:
         return "Your personality is a Forensic Analytical AI. You are strictly logical, precise, and professional. Your questions should be clinical and objective."
 

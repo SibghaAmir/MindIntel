@@ -72,7 +72,9 @@ function TimeAttackBar({ active, onExpire, questionKey }: { active: boolean, onE
 export default function InvestigationScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles(colors, gradients);
-  const timeAttack = useSettingsStore((s) => s.timeAttack);
+  const baseTimeAttack = useSettingsStore((s) => s.timeAttack);
+  const personality = useGameStore((s) => s.personality);
+  const timeAttack = baseTimeAttack || personality === 'bad_cop';
 
   const {
     caseNumber,

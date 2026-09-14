@@ -17,6 +17,7 @@ interface BackendGameState {
   reason: string | null;
   contradiction: string | null;
   is_daily: boolean;
+  personality: string;
 }
 
 // Maps backend schema to our frontend Zustand state shape
@@ -65,6 +66,7 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
     snapshot,
     contradiction: backend.contradiction,
     isDaily: backend.is_daily,
+    personality: backend.personality,
   };
 };
 
