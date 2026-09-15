@@ -60,6 +60,15 @@ export default function HomeScreen() {
               style={styles.secondaryGap}
             />
             <SecondaryButton
+              label="THE LIAR'S PARADOX"
+              icon="alert-circle-outline"
+              onPress={() => {
+                useGameStore.getState().startDeceptionMode();
+                router.push('/investigation');
+              }}
+              style={styles.secondaryGap}
+            />
+            <SecondaryButton
               label="ENTER THE GAUNTLET"
               icon="trophy-outline"
               onPress={() => {

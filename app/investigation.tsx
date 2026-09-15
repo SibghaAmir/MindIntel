@@ -174,16 +174,16 @@ export default function InvestigationScreen() {
           </AnimatedPressable>
         )}
         <InvestigationCard
-          status={isThinking ? (mode === 'reverse' ? 'AI IS THINKING...' : 'AI IS ANALYZING...') : (mode === 'reverse' ? 'YOUR TURN' : 'ANALYZING')}
+          status={isThinking ? ((mode === 'reverse' || mode === 'deception') ? 'AI IS THINKING...' : 'AI IS ANALYZING...') : ((mode === 'reverse' || mode === 'deception') ? 'YOUR TURN' : 'ANALYZING')}
           message={
             isThinking
               ? "Communicating with backend..."
-              : (mode === 'reverse' ? "Ask me a Yes/No question, or guess!" : "I'm narrowing down the possibilities.")
+              : ((mode === 'reverse' || mode === 'deception') ? "Ask me a Yes/No question, or guess!" : "I'm narrowing down the possibilities.")
           }
           coreState={isThinking ? 'thinking' : coreStateForConfidence(confidence)}
         />
 
-        {timeAttack && mode !== 'reverse' && (
+        {timeAttack && mode !== 'reverse' && mode !== 'deception' && (
           <TimeAttackBar
             active={!isThinking && status === 'playing'}
             onExpire={() => handleAnswer('unknown')}
@@ -191,8 +191,22 @@ export default function InvestigationScreen() {
           />
         )}
 
-        {mode === 'reverse' ? (
+        {mode === 'reverse' || mode === 'deception' ? (
           <View style={styles.reverseWrap}>
+            {mode === 'deception' && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                <Text style={{ ...typography.caption, color: colors.warning }}>THE LIAR'S PARADOX ACTIVE</Text>
+                {useGameStore.getState().factChecksRemaining > 0 && answers.length > 0 && (
+                  <SecondaryButton 
+                    label="FACT CHECK" 
+                    icon="shield-checkmark" 
+                    onPress={() => useGameStore.getState().factCheck()} 
+                    disabled={isThinking}
+                    style={{ paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, minHeight: 0 }}
+                  />
+                )}
+              </View>
+            )}
             {answers.map((qa, i) => (
               <View key={i} style={styles.reverseQARow}>
                 <Text style={styles.reverseQText}>Q: {qa.question}</Text>

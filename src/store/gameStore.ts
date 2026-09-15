@@ -40,6 +40,10 @@ interface GameStore extends GameState {
   
   isDaily: boolean;
   startDailyCipher: () => Promise<void>;
+  
+  startDeceptionMode: () => Promise<void>;
+  factChecksRemaining: number;
+  factCheck: () => Promise<void>;
 }
 
 let caseCounter = 26;
@@ -66,6 +70,7 @@ function initialState(): GameState {
       categoryBreakdown: [],
     },
     evidenceBoard: [],
+    factChecksRemaining: 0,
   };
 }
 
@@ -199,6 +204,49 @@ export const useGameStore = create<GameStore>((set, get) => ({
         apiError: error.message || 'Failed to start daily case.',
         isAnalyzing: false,
       });
+    }
+  },
+
+  startDeceptionMode: async () => {
+    caseCounter += 1;
+    useSettingsStore.getState().setTimeAttack(false); // No time attack
+    
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } });
+
+    try {
+      const newState = await gameApi.createGame('anything', 'deception', 'normal', useSettingsStore.getState().personality);
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      const updatedBoard = newPossibilities.slice(0, 9).map((p, i) => ({
+        id: `suspect-init-${i}-${p}`,
+        name: p,
+        status: 'active' as const
+      }));
+
+      set({
+        ...newState,
+        caseNumber: caseCounter,
+        isAnalyzing: false,
+        evidenceBoard: updatedBoard,
+        factChecksRemaining: 1,
+      });
+    } catch (error: any) {
+      set({
+        apiError: error.message || 'Failed to start deception mode.',
+        isAnalyzing: false,
+      });
+    }
+  },
+
+  factCheck: async () => {
+    const state = get();
+    if (!state.gameId || state.factChecksRemaining <= 0) return;
+    
+    set({ isAnalyzing: true, apiError: null });
+    try {
+      const newState = await gameApi.factCheck(state.gameId);
+      set({ ...newState, isAnalyzing: false, factChecksRemaining: 0 });
+    } catch (error: any) {
+      set({ apiError: error.message || 'Fact check failed.', isAnalyzing: false });
     }
   },
 

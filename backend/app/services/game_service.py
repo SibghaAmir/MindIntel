@@ -15,12 +15,12 @@ def extract_game_state(graph_state: dict) -> GameState:
 
 def get_graph_for_game(game_id: UUID) -> object:
     game = games_db.get(game_id)
-    if game and game.mode == "reverse":
+    if game and game.mode in ["reverse", "deception"]:
         return reverse_graph
     return app_graph
 
 def get_graph_for_mode(mode: str) -> object:
-    if mode == "reverse":
+    if mode in ["reverse", "deception"]:
         return reverse_graph
     return app_graph
 
@@ -52,6 +52,10 @@ def create_game(request: CreateGameRequest) -> GameState:
         "target_entity": None,
         "contradiction": None,
         "is_daily": False,
+        "has_lied": False,
+        "lie_index": -1,
+        "lie_caught": False,
+        "fact_checks": 1 if request.mode == "deception" else 0,
         "pending_answer": None,
         "pending_confirmation": None
     }
@@ -119,6 +123,26 @@ def process_answer(game_id: UUID, request: AnswerRequest) -> Optional[GameState]
     result = graph.invoke(None, config)
     
     game = extract_game_state(result)
+    games_db[game_id] = game
+    return game
+
+def fact_check(game_id: UUID) -> Optional[GameState]:
+    game = get_game(game_id)
+    if not game: return None
+    
+    if game.fact_checks <= 0:
+        return game
+        
+    last_idx = len(game.answers) - 1
+    if game.lie_index == last_idx and not game.lie_caught:
+        game.lie_caught = True
+        game.max_questions += 3
+        game.contradiction = "You caught me! That was a lie. I've penalized myself with 3 extra questions for you."
+    else:
+        game.question_number = min(game.max_questions, game.question_number + 3)
+        game.contradiction = "That was the truth! You doubted me, so I penalized you with 3 questions."
+        
+    game.fact_checks -= 1
     games_db[game_id] = game
     return game
 

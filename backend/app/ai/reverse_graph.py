@@ -1,4 +1,4 @@
-﻿from typing import TypedDict, List, Optional
+from typing import TypedDict, List, Optional
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -22,6 +22,8 @@ class GraphState(TypedDict):
     guess: Optional[str]
     reason: Optional[str]
     target_entity: Optional[str]
+    has_lied: Optional[bool]
+    lie_index: Optional[int]
     
     pending_answer: Optional[str]
     pending_confirmation: Optional[bool]
@@ -41,6 +43,21 @@ def evaluate_question(state: GraphState) -> dict:
     target = state.get("target_entity")
     ans = evaluate_player_question(target, question)
     
+    # Deception mechanic
+    mode = state.get("mode", "reverse")
+    has_lied = state.get("has_lied", False)
+    lie_index = state.get("lie_index", -1)
+    
+    if mode == "deception" and not has_lied and ans in ["yes", "no"]:
+        import random
+        question_number = state.get("question_number", 0)
+        max_questions = state.get("max_questions", 20)
+        # Lie if random 15% chance, or if only 3 questions left and haven't lied yet
+        if random.random() < 0.15 or question_number >= max_questions - 3:
+            ans = "no" if ans == "yes" else "yes"
+            has_lied = True
+            lie_index = len(state.get("answers", []))
+    
     # ans is 'yes', 'no', 'maybe', 'guess_correct', 'guess_incorrect'
     questions = list(state.get("questions", [])) + [question]
     answers = list(state.get("answers", [])) + [ans]
@@ -57,7 +74,9 @@ def evaluate_question(state: GraphState) -> dict:
         "question_number": state.get("question_number", 0) + 1,
         "pending_answer": None,
         "status": status,
-        "guess": target if status != "playing" else None
+        "guess": target if status != "playing" else None,
+        "has_lied": has_lied,
+        "lie_index": lie_index
     }
 
 def finish_game(state: GraphState) -> dict:

@@ -21,6 +21,10 @@ class GameState(BaseModel):
     target_entity: Optional[str] = None
     contradiction: Optional[str] = None
     is_daily: bool = False
+    has_lied: bool = False
+    lie_index: int = -1
+    lie_caught: bool = False
+    fact_checks: int = 1
 
 class CreateGameRequest(BaseModel):
     category: str

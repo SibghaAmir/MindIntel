@@ -93,6 +93,13 @@ export const gameApi = {
     });
     return mapBackendStateToFrontend(data);
   },
+  
+  factCheck: async (gameId: string): Promise<GameState> => {
+    const data = await fetchApi<BackendGameState>(`/games/${gameId}/fact_check`, {
+      method: 'POST',
+    });
+    return mapBackendStateToFrontend(data);
+  },
 
   forceGuess: async (gameId: string): Promise<GameState> => {
     const data = await fetchApi<BackendGameState>(`/games/${gameId}/force-guess`, {
