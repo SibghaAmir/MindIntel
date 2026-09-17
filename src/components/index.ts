@@ -17,4 +17,6 @@ export { StatCard } from './StatCard';
 export { Confetti } from './Confetti';
 export { AchievementToast } from './AchievementToast';
 export { BrainScanModal } from './BrainScanModal';
+export { TimeAttackBar } from './TimeAttackBar';
 export { SuspectCard } from './SuspectCard';
+export { BlackMarketModal } from './BlackMarketModal';

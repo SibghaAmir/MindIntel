@@ -44,6 +44,11 @@ interface GameStore extends GameState {
   startDeceptionMode: () => Promise<void>;
   factChecksRemaining: number;
   factCheck: () => Promise<void>;
+  
+  polygraphActive: boolean;
+  applyBribe: () => Promise<void>;
+  applyAssassination: () => void;
+  applyPolygraph: () => void;
 }
 
 let caseCounter = 26;
@@ -71,6 +76,7 @@ function initialState(): GameState {
     },
     evidenceBoard: [],
     factChecksRemaining: 0,
+    polygraphActive: false,
   };
 }
 
@@ -248,6 +254,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch (error: any) {
       set({ apiError: error.message || 'Fact check failed.', isAnalyzing: false });
     }
+  },
+
+  applyBribe: async () => {
+    const state = get();
+    if (!state.gameId) return;
+    try {
+      const newState = await gameApi.applyBribe(state.gameId);
+      set({ maxQuestions: newState.maxQuestions });
+    } catch (e) {
+      console.warn("Failed to apply bribe", e);
+    }
+  },
+
+  applyAssassination: () => {
+    const state = get();
+    const board = [...state.evidenceBoard];
+    let eliminatedCount = 0;
+    
+    for (let i = board.length - 1; i >= 0; i--) {
+      if (board[i].status === 'active') {
+        board[i] = { ...board[i], status: 'eliminated' };
+        eliminatedCount++;
+        if (eliminatedCount >= 3) break;
+      }
+    }
+    
+    set({ evidenceBoard: board });
+  },
+
+  applyPolygraph: () => {
+    set({ polygraphActive: true });
   },
 
   answerQuestion: async (answer) => {

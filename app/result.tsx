@@ -61,6 +61,13 @@ export default function ResultScreen() {
   }, [questionNumber, guess]);
 
   const handleNewCase = () => {
+    let earnedCredits = 0;
+    if (playerWon) {
+      const remaining = maxQuestions - questionNumber;
+      earnedCredits = 50 + (remaining * 10);
+      import('@/src/store/economyStore').then(m => m.useEconomyStore.getState().addCredits(earnedCredits));
+    }
+
     const record: CaseRecord = {
       id: `case-${Date.now()}`,
       caseNumber,
@@ -293,11 +300,14 @@ export default function ResultScreen() {
               }} 
             />
           ) : (
-            <PrimaryButton 
+              <PrimaryButton 
               label={playerWon ? "CLAIM TITLE" : "BACK TO HOME"} 
               icon={playerWon ? "trophy" : "home"} 
               onPress={() => {
-                if (playerWon) incrementGauntletScore(score); // Add final score if they won stage 3
+                if (playerWon) {
+                  incrementGauntletScore(score);
+                  import('@/src/store/economyStore').then(m => m.useEconomyStore.getState().addCredits(200)); // big bonus
+                }
                 const record: CaseRecord = {
                   id: `gauntlet-${Date.now()}`,
                   caseNumber,

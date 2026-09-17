@@ -31,6 +31,14 @@ def submit_answer_endpoint(game_id: UUID, request: AnswerRequest):
 def fact_check_endpoint(game_id: UUID):
     return game_service.fact_check(game_id)
 
+@router.post("/{game_id}/bribe", response_model=GameState)
+def apply_bribe_endpoint(game_id: UUID):
+    from app.services.economy_service import apply_bribe
+    game = apply_bribe(game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return game
+
 @router.post("/{game_id}/guess/confirm", response_model=GameState)
 def confirm_guess_endpoint(game_id: UUID, request: ConfirmGuessRequest):
     game = game_service.process_guess_confirmation(game_id, request)

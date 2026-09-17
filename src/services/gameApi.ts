@@ -101,6 +101,13 @@ export const gameApi = {
     return mapBackendStateToFrontend(data);
   },
 
+  applyBribe: async (gameId: string): Promise<GameState> => {
+    const data = await fetchApi<BackendGameState>(`/games/${gameId}/bribe`, {
+      method: 'POST',
+    });
+    return mapBackendStateToFrontend(data);
+  },
+
   forceGuess: async (gameId: string): Promise<GameState> => {
     const data = await fetchApi<BackendGameState>(`/games/${gameId}/force-guess`, {
       method: 'POST',

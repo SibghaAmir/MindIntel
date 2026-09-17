@@ -16,6 +16,7 @@ import {
   CandidateCard,
   SecondaryButton,
   SuspectCard,
+  BlackMarketModal,
 } from '@/src/components';
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
@@ -96,9 +97,12 @@ export default function InvestigationScreen() {
     contradiction,
     clearContradiction,
     evidenceBoard = [],
+    polygraphActive,
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
+  const [blackMarketVisible, setBlackMarketVisible] = useState(false);
+  const coreScale = useSharedValue(1);
   const [reverseInput, setReverseInput] = useState('');
   const isThinking = isAnalyzing; // We use isAnalyzing for the loading state
 
@@ -132,9 +136,14 @@ export default function InvestigationScreen() {
           <Text style={styles.caseLabel}>CASE #{String(caseNumber).padStart(3, '0')}</Text>
           <Text style={typography.h2}>Investigation</Text>
         </View>
-        <Text style={styles.counter}>
-          {String(questionNumber).padStart(2, '0')} / {maxQuestions}
-        </Text>
+        <View style={{ alignItems: 'flex-end' }}>
+          <AnimatedPressable onPress={() => setBlackMarketVisible(true)} style={{ marginBottom: 4 }}>
+            <Ionicons name="cart" size={24} color={colors.danger} />
+          </AnimatedPressable>
+          <Text style={styles.counter}>
+            {String(questionNumber).padStart(2, '0')} / {maxQuestions}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.progressWrap}>
@@ -178,7 +187,7 @@ export default function InvestigationScreen() {
           message={
             isThinking
               ? "Communicating with backend..."
-              : ((mode === 'reverse' || mode === 'deception') ? "Ask me a Yes/No question, or guess!" : "I'm narrowing down the possibilities.")
+              : ((mode === 'reverse' || mode === 'deception') ? "Ask me a Yes/No question, or guess!" : (polygraphActive ? `Current Confidence: ${confidence}%` : "I'm narrowing down the possibilities."))
           }
           coreState={isThinking ? 'thinking' : coreStateForConfidence(confidence)}
         />
@@ -349,6 +358,8 @@ export default function InvestigationScreen() {
           </GlassCard>
         )}
       </ScrollView>
+
+      <BlackMarketModal visible={blackMarketVisible} onClose={() => setBlackMarketVisible(false)} />
     </SafeAreaView>
   );
 }
