@@ -11,6 +11,7 @@ import { AIInvestigationCore, GlassCard, PrimaryButton, SecondaryButton, StatCar
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
 import { useCasesStore } from '@/src/store/casesStore';
+import { useLoreStore } from '@/src/store/loreStore';
 import type { CaseRecord } from '@/src/types/game';
 
 import { gameApi } from '@/src/services/gameApi';
@@ -29,6 +30,20 @@ export default function ResultScreen() {
   const [subjectInput, setSubjectInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [scanVisible, setScanVisible] = useState(false);
+  const [newLore, setNewLore] = useState<any>(null);
+
+  useEffect(() => {
+    if (playerWon) {
+      // 40% chance to drop lore on win
+      if (Math.random() < 0.4) {
+        const lore = useLoreStore.getState().unlockRandomLore();
+        if (lore) {
+          setNewLore(lore);
+          import('expo-haptics').then((H) => H.notificationAsync(H.NotificationFeedbackType.Success));
+        }
+      }
+    }
+  }, [playerWon]);
 
   useEffect(() => {
     if (!isAiWin) {
@@ -245,6 +260,24 @@ export default function ResultScreen() {
             onPress={() => setScanVisible(true)}
           />
         </View>
+
+        {newLore && (
+          <GlassCard style={{ backgroundColor: 'rgba(0, 255, 100, 0.1)', borderColor: colors.success, marginTop: spacing.md, width: '100%', alignItems: 'center' }}>
+            <Ionicons name="lock-open-outline" size={24} color={colors.success} style={{ marginBottom: spacing.xs }} />
+            <Text style={{ ...typography.h3, color: colors.success }}>LORE FRAGMENT RECOVERED</Text>
+            <Text style={{ ...typography.bodyMedium, color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.md }}>
+              &quot;{newLore.title}&quot; has been added to your Archives.
+            </Text>
+            <SecondaryButton 
+              label="VIEW ARCHIVES" 
+              icon="library-outline" 
+              onPress={() => {
+                useLoreStore.getState().clearNewLoreFlag();
+                router.replace('/(tabs)/archives');
+              }} 
+            />
+          </GlassCard>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
