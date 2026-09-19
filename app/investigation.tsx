@@ -202,13 +202,13 @@ export default function InvestigationScreen() {
           </AnimatedPressable>
         )}
         <InvestigationCard
-          status={isThinking ? ((mode === 'reverse' || mode === 'deception') ? 'AI IS THINKING...' : 'AI IS ANALYZING...') : ((mode === 'reverse' || mode === 'deception') ? 'YOUR TURN' : 'ANALYZING')}
+          status={isThinking ? ((mode === 'reverse' || mode === 'deception') ? 'AI IS THINKING...' : 'AI IS ANALYZING...') : (status === 'desperation' ? 'SYSTEM FAILURE' : ((mode === 'reverse' || mode === 'deception') ? 'YOUR TURN' : 'ANALYZING'))}
           message={
             isThinking
               ? "Communicating with backend..."
-              : ((mode === 'reverse' || mode === 'deception') ? "Ask me a Yes/No question, or guess!" : (polygraphActive ? `Current Confidence: ${confidence}%` : "I'm narrowing down the possibilities."))
+              : (status === 'desperation' ? "I cannot compute an answer. Give me one final clue." : ((mode === 'reverse' || mode === 'deception') ? "Ask me a Yes/No question, or guess!" : (polygraphActive ? `Current Confidence: ${confidence}%` : "I'm narrowing down the possibilities.")))
           }
-          coreState={isThinking ? 'thinking' : coreStateForConfidence(confidence)}
+          coreState={isThinking ? 'thinking' : (status === 'desperation' ? 'highConfidence' : coreStateForConfidence(confidence))}
         />
 
         {timeAttack && mode !== 'reverse' && mode !== 'deception' && (
@@ -273,6 +273,48 @@ export default function InvestigationScreen() {
               </AnimatedPressable>
             </View>
           </View>
+        ) : status === 'desperation' ? (
+          <GlassCard style={{ borderColor: colors.danger, borderWidth: 2, padding: spacing.lg, marginBottom: spacing.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
+              <Ionicons name="warning" size={24} color={colors.danger} />
+              <Text style={{ ...typography.h3, color: colors.danger, marginLeft: spacing.xs }}>CRITICAL FAILURE</Text>
+            </View>
+            <Text style={{ ...typography.bodyMedium, color: colors.textPrimary, marginBottom: spacing.md }}>
+              I am out of questions and unable to form a conclusion. However, my analytical engine requires resolution.
+            </Text>
+            <Text style={{ ...typography.bodyMedium, color: colors.warning, marginBottom: spacing.lg }}>
+              Provide a SINGLE WORD clue. I will make one final desperation guess based on everything we've gathered.
+            </Text>
+            
+            <View style={styles.reverseInputRow}>
+              <import_react_native.TextInput
+                style={[styles.reverseInput, { color: colors.textPrimary, borderColor: colors.danger }]}
+                placeholder="Enter one final clue..."
+                placeholderTextColor={colors.textTertiary}
+                value={reverseInput}
+                onChangeText={setReverseInput}
+                onSubmitEditing={() => {
+                  if (reverseInput.trim()) {
+                    useGameStore.getState().submitDesperationClue(reverseInput.trim());
+                    setReverseInput('');
+                  }
+                }}
+                editable={!isThinking}
+              />
+              <AnimatedPressable
+                onPress={() => {
+                  if (reverseInput.trim()) {
+                    useGameStore.getState().submitDesperationClue(reverseInput.trim());
+                    setReverseInput('');
+                  }
+                }}
+                disabled={isThinking || !reverseInput.trim()}
+                style={[styles.reverseSendBtn, { backgroundColor: colors.danger }]}
+              >
+                <Ionicons name="send" size={18} color="#fff" />
+              </AnimatedPressable>
+            </View>
+          </GlassCard>
         ) : (
           <>
             <QuestionCard question={currentQuestion} questionKey={questionNumber} />

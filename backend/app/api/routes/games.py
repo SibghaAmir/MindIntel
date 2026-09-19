@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from uuid import UUID
-from app.schemas.game import GameState, CreateGameRequest, AnswerRequest, ConfirmGuessRequest
+from app.schemas.game import GameState, CreateGameRequest, AnswerRequest, ConfirmGuessRequest, HintResponse, DesperationRequest
 from app.services import game_service
 
 router = APIRouter()
@@ -52,7 +52,15 @@ def force_guess_endpoint(game_id: UUID):
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
-@router.get("/{game_id}/hint")
+
+@router.post("/{game_id}/desperation", response_model=GameState)
+def desperation_endpoint(game_id: UUID, request: DesperationRequest):
+    game = game_service.process_desperation_clue(game_id, request)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return game
+
+@router.get("/{game_id}/hint", response_model=HintResponse)
 def get_hint_endpoint(game_id: UUID):
     hint = game_service.get_game_hint(game_id)
     if not hint:

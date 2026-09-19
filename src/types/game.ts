@@ -9,13 +9,7 @@ export type InvestigationMode = 'standard' | 'rapid' | 'reverse' | 'deception';
 
 export type AnswerValue = 'yes' | 'no' | 'maybe' | 'unknown' | string;
 
-export type GameStatus =
-  | 'idle'
-  | 'playing'
-  | 'thinking'
-  | 'guessing'
-  | 'won'
-  | 'lost';
+export type GameStatus = 'idle' | 'playing' | 'thinking' | 'guessing' | 'desperation' | 'won' | 'lost';
 
 export interface CategoryOption {
   id: CaseCategoryId;

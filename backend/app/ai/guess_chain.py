@@ -9,9 +9,14 @@ def generate_guess(game: GameState) -> GuessResponse:
     llm = get_llm()
     structured_llm = llm.with_structured_output(GuessResponse)
     
+    clue = getattr(game, 'desperation_clue', None)
+    human_msg = "Make your final guess."
+    if clue:
+        human_msg = f"Make your final guess. The player gave you one final desperation clue: '{clue}'."
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", GUESS_PROMPT),
-        ("human", "Make your final guess.")
+        ("human", human_msg)
     ])
     
     chain = prompt | structured_llm

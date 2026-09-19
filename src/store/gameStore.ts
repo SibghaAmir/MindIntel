@@ -19,6 +19,7 @@ interface GameStore extends GameState {
   setMode: (mode: InvestigationMode) => void;
   startInvestigation: () => Promise<void>;
   answerQuestion: (answer: AnswerValue) => Promise<void>;
+  submitDesperationClue: (clue: string) => Promise<void>;
   forceGuess: () => Promise<void>;
   confirmGuessCorrect: () => Promise<void>;
   rejectGuess: () => Promise<void>;
@@ -360,6 +361,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch (error: any) {
       audioManager.stopThinking();
       set({ apiError: error.message || 'Failed to force guess.', isAnalyzing: false, status: 'playing' });
+    }
+  },
+
+  submitDesperationClue: async (clue: string) => {
+    const state = get();
+    if (state.status !== 'desperation' || !state.gameId) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    audioManager.playBlip();
+    set({ status: 'thinking', isAnalyzing: true, apiError: null });
+    audioManager.startThinking();
+
+    try {
+      const newState = await gameApi.submitDesperationClue(state.gameId, clue);
+      if (get().gameId !== state.gameId) {
+        audioManager.stopThinking();
+        return;
+      }
+
+      audioManager.stopThinking();
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
+    } catch (error: any) {
+      audioManager.stopThinking();
+      set({ apiError: error.message || 'Failed to submit clue.', isAnalyzing: false, status: 'desperation' });
     }
   },
 

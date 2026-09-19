@@ -56,9 +56,17 @@ def decide_action(state: GraphState) -> str:
     else:
         threshold = 90
 
-    if state.get("force_guess") or state["question_number"] >= state["max_questions"] or state["confidence"] > threshold:
+    if state.get("force_guess") or state["confidence"] > threshold:
         return "generate_guess"
+    if state["question_number"] >= state["max_questions"]:
+        return "enter_desperation"
     return "generate_question"
+
+def enter_desperation(state: GraphState) -> dict:
+    return {"status": "desperation"}
+
+def process_desperation(state: GraphState) -> dict:
+    return {"desperation_clue": state.get("pending_desperation_clue"), "pending_desperation_clue": None}
 
 def generate_question(state: GraphState) -> dict:
     game_kwargs = {k: v for k, v in state.items() if k not in ['pending_answer', 'pending_confirmation', 'contradiction'] and v is not None}
@@ -135,6 +143,8 @@ workflow = StateGraph(GraphState)
 workflow.add_node("analyze_state", analyze_state)
 workflow.add_node("retrieve_candidates", retrieve_candidates)
 workflow.add_node("generate_question", generate_question)
+workflow.add_node("enter_desperation", enter_desperation)
+workflow.add_node("process_desperation", process_desperation)
 workflow.add_node("generate_guess", generate_guess)
 workflow.add_node("process_answer", process_answer)
 workflow.add_node("check_contradiction", check_contradiction_node)
@@ -149,14 +159,17 @@ workflow.add_conditional_edges(
     decide_action,
     {
         "generate_question": "generate_question",
-        "generate_guess": "generate_guess"
+        "generate_guess": "generate_guess",
+        "enter_desperation": "enter_desperation"
     }
 )
 
-# Graph interrupts before processing answers/confirmations (WAIT)
 workflow.add_edge("generate_question", "process_answer")
 workflow.add_edge("process_answer", "check_contradiction")
 workflow.add_edge("check_contradiction", "analyze_state")
+
+workflow.add_edge("enter_desperation", "process_desperation")
+workflow.add_edge("process_desperation", "generate_guess")
 
 workflow.add_edge("generate_guess", "process_confirmation")
 workflow.add_edge("process_confirmation", "finish_game")
@@ -165,5 +178,5 @@ workflow.add_edge("finish_game", END)
 memory = MemorySaver()
 app_graph = workflow.compile(
     checkpointer=memory, 
-    interrupt_before=["process_answer", "process_confirmation"]
+    interrupt_before=["process_answer", "process_confirmation", "process_desperation"]
 )

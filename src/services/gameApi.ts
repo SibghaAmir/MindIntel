@@ -115,6 +115,14 @@ export const gameApi = {
     return mapBackendStateToFrontend(data);
   },
 
+  submitDesperationClue: async (gameId: string, clue: string): Promise<GameState> => {
+    const data = await fetchApi<BackendGameState>(`/games/${gameId}/desperation`, {
+      method: 'POST',
+      body: JSON.stringify({ clue }),
+    });
+    return mapBackendStateToFrontend(data);
+  },
+
   confirmGuess: async (gameId: string, correct: boolean): Promise<GameState> => {
     const data = await fetchApi<BackendGameState>(`/games/${gameId}/guess/confirm`, {
       method: 'POST',

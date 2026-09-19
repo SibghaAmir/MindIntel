@@ -181,3 +181,17 @@ def get_game_hint(game_id: UUID) -> Optional[str]:
     if not game:
         return None
     return generate_hint(game)
+
+def process_desperation_clue(game_id: UUID, request: DesperationRequest) -> Optional[GameState]:
+    if game_id not in games_db:
+        return None
+        
+    config = {"configurable": {"thread_id": str(game_id)}}
+    graph = get_graph_for_game(game_id)
+    
+    graph.update_state(config, {"pending_desperation_clue": request.clue})
+    result = graph.invoke(None, config)
+    
+    game = extract_game_state(result)
+    games_db[game_id] = game
+    return game

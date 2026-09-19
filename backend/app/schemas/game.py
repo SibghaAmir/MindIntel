@@ -25,6 +25,8 @@ class GameState(BaseModel):
     lie_index: int = -1
     lie_caught: bool = False
     fact_checks: int = 1
+    desperation_clue: Optional[str] = None
+    pending_desperation_clue: Optional[str] = None
 
 class CreateGameRequest(BaseModel):
     category: str
@@ -37,3 +39,6 @@ class AnswerRequest(BaseModel):
 
 class ConfirmGuessRequest(BaseModel):
     correct: bool
+
+class DesperationRequest(BaseModel):
+    clue: str
