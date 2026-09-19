@@ -1,7 +1,7 @@
 import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, LayoutAnimation, Platform, UIManager, TextInput } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS, withRepeat } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +17,7 @@ import {
   SecondaryButton,
   SuspectCard,
   BlackMarketModal,
+  HeartbeatMonitor,
 } from '@/src/components';
 import { colors, radius, spacing, typography } from '@/src/theme';
 import { useGameStore } from '@/src/store/gameStore';
@@ -106,6 +107,21 @@ export default function InvestigationScreen() {
   const [reverseInput, setReverseInput] = useState('');
   const isThinking = isAnalyzing; // We use isAnalyzing for the loading state
 
+  const isDangerZone = maxQuestions - questionNumber <= 3;
+  const dangerPulse = useSharedValue(0);
+
+  useEffect(() => {
+    if (isDangerZone && status === 'playing' && !isThinking) {
+      dangerPulse.value = withRepeat(withTiming(0.15, { duration: 800, easing: Easing.inOut(Easing.ease) }), -1, true);
+    } else {
+      dangerPulse.value = withTiming(0, { duration: 500 });
+    }
+  }, [isDangerZone, status, isThinking]);
+
+  const dangerStyle = useAnimatedStyle(() => ({
+    opacity: dangerPulse.value,
+  }));
+
   useEffect(() => {
     if (status === 'won' || status === 'lost' || (status === 'guessing' && !isAnalyzing)) {
       router.replace('/conclusion');
@@ -131,6 +147,7 @@ export default function InvestigationScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.danger, zIndex: 100 }, dangerStyle]} />
       <View style={styles.header}>
         <View>
           <Text style={styles.caseLabel}>CASE #{String(caseNumber).padStart(3, '0')}</Text>
@@ -145,6 +162,8 @@ export default function InvestigationScreen() {
           </Text>
         </View>
       </View>
+
+      <HeartbeatMonitor currentQuestion={questionNumber} maxQuestions={maxQuestions} active={status === 'playing' && !isThinking} />
 
       <View style={styles.progressWrap}>
         <ProgressIndicator current={questionNumber} total={maxQuestions} />
