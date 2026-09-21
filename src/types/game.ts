@@ -73,6 +73,8 @@ export interface GameState {
   contradiction?: string | null;
   isDaily?: boolean;
   evidenceBoard?: EvidenceBoardItem[];
+  factChecksRemaining?: number;
+  transcript?: string;
   personality?: string;
 }
 

@@ -138,9 +138,13 @@ export const gameApi = {
     });
   },
 
-  getHint: async (gameId: string): Promise<{ hint: string }> => {
-    return fetchApi<{ hint: string }>(`/games/${gameId}/hint`, {
-      method: 'GET',
-    });
-  }
+  getHint: async (gameId: string): Promise<string> => {
+    const data = await fetchApi<{ hint: string }>(`/games/${gameId}/hint`);
+    return data.hint;
+  },
+
+  getTranscript: async (gameId: string): Promise<string> => {
+    const data = await fetchApi<{ transcript: string }>(`/games/${gameId}/transcript`);
+    return data.transcript;
+  },
 };

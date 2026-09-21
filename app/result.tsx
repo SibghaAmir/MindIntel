@@ -1,6 +1,6 @@
 import { useTheme } from '@/src/theme/ThemeContext';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, Share } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, Share, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,7 +20,7 @@ export default function ResultScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles(colors, gradients);
 
-  const { status, guess, questionNumber, maxQuestions, caseNumber, category, resetGame, mode, gauntlet, incrementGauntletScore, startGauntletStage, endGauntlet } =
+  const { gameId, status, guess, questionNumber, maxQuestions, caseNumber, category, resetGame, mode, gauntlet, incrementGauntletScore, startGauntletStage, endGauntlet } =
     useGameStore();
   const addCase = useCasesStore((s) => s.addCase);
 
@@ -31,6 +31,8 @@ export default function ResultScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [scanVisible, setScanVisible] = useState(false);
   const [newLore, setNewLore] = useState<any>(null);
+  const [transcript, setTranscript] = useState<string | null>(null);
+  const [loadingTranscript, setLoadingTranscript] = useState(false);
 
   useEffect(() => {
     if (playerWon) {
@@ -83,6 +85,19 @@ export default function ResultScreen() {
     addCase(record);
     resetGame();
     router.replace('/(tabs)');
+  };
+
+  const handleFetchTranscript = async () => {
+    if (!gameId) return;
+    setLoadingTranscript(true);
+    try {
+      const text = await gameApi.getTranscript(gameId);
+      setTranscript(text);
+    } catch (e) {
+      console.warn(e);
+    } finally {
+      setLoadingTranscript(false);
+    }
   };
 
   const handleSubmitPlayerCase = async () => {
@@ -260,13 +275,38 @@ export default function ResultScreen() {
           )}
         </ViewShot>
 
-        <View style={{ marginTop: spacing.lg, width: '100%' }}>
+        <View style={{ marginTop: spacing.lg, width: '100%', gap: spacing.sm }}>
           <SecondaryButton
             label="VIEW AI BRAIN SCAN"
             icon="hardware-chip-outline"
             onPress={() => setScanVisible(true)}
           />
+          <SecondaryButton
+            label={loadingTranscript ? "DECRYPTING WIRETAP..." : "DECRYPT WIRETAP TRANSCRIPT"}
+            icon="document-text-outline"
+            onPress={handleFetchTranscript}
+            disabled={loadingTranscript}
+          />
         </View>
+
+        {transcript && (
+          <GlassCard style={{ backgroundColor: '#f0ebd8', borderColor: '#d3c9a3', marginTop: spacing.lg, width: '100%' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: '#d3c9a3', paddingBottom: spacing.xs }}>
+              <Ionicons name="finger-print" size={24} color="#1a1a1a" />
+              <Text style={{ ...typography.h3, color: '#1a1a1a', marginLeft: spacing.sm, letterSpacing: 2 }}>CLASSIFIED: WIRETAP RECORD</Text>
+            </View>
+            <Text style={{ fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', color: '#1a1a1a', fontSize: 13, lineHeight: 20 }}>
+              {transcript.split('[REDACTED]').map((part, index, array) => (
+                <React.Fragment key={index}>
+                  {part}
+                  {index < array.length - 1 && (
+                    <Text style={{ backgroundColor: '#1a1a1a', color: '#1a1a1a' }}>[REDACTED]</Text>
+                  )}
+                </React.Fragment>
+              ))}
+            </Text>
+          </GlassCard>
+        )}
 
         {newLore && (
           <GlassCard style={{ backgroundColor: 'rgba(0, 255, 100, 0.1)', borderColor: colors.success, marginTop: spacing.md, width: '100%', alignItems: 'center' }}>

@@ -65,7 +65,14 @@ def get_hint_endpoint(game_id: UUID):
     hint = game_service.get_game_hint(game_id)
     if not hint:
         raise HTTPException(status_code=404, detail="Game not found")
-    return {"hint": hint}
+    return HintResponse(hint=hint)
+
+@router.get("/{game_id}/transcript")
+def get_transcript_endpoint(game_id: UUID):
+    transcript = game_service.get_transcript(game_id)
+    if not transcript:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return {"transcript": transcript}
 
 from pydantic import BaseModel
 class LearnRequest(BaseModel):

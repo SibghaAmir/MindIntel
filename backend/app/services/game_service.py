@@ -195,3 +195,16 @@ def process_desperation_clue(game_id: UUID, request: DesperationRequest) -> Opti
     game = extract_game_state(result)
     games_db[game_id] = game
     return game
+
+def get_transcript(game_id: UUID) -> Optional[str]:
+    game = games_db.get(game_id)
+    if not game:
+        return None
+    if game.transcript:
+        return game.transcript
+    
+    from app.ai.transcript_chain import generate_transcript
+    transcript = generate_transcript(game)
+    game.transcript = transcript
+    games_db[game_id] = game
+    return transcript

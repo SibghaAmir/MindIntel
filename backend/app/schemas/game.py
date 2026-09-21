@@ -27,6 +27,7 @@ class GameState(BaseModel):
     fact_checks: int = 1
     desperation_clue: Optional[str] = None
     pending_desperation_clue: Optional[str] = None
+    transcript: Optional[str] = None
 
 class CreateGameRequest(BaseModel):
     category: str
