@@ -110,6 +110,8 @@ export default function InvestigationScreen() {
   const isDangerZone = maxQuestions - questionNumber <= 3;
   const dangerPulse = useSharedValue(0);
 
+  const { retconActive, applyRetcon, answers } = useGameStore();
+
   useEffect(() => {
     if (isDangerZone && status === 'playing' && !isThinking) {
       dangerPulse.value = withRepeat(withTiming(0.15, { duration: 800, easing: Easing.inOut(Easing.ease) }), -1, true);
@@ -419,6 +421,37 @@ export default function InvestigationScreen() {
           </GlassCard>
         )}
       </ScrollView>
+
+      {retconActive && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 200, padding: spacing.lg, paddingTop: 60 }]}>
+          <Text style={{ ...typography.h2, color: colors.electricViolet, marginBottom: spacing.md, textAlign: 'center' }}>TIMELINE MODIFICATION</Text>
+          <Text style={{ ...typography.bodyMedium, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+            Select a past event to erase it from reality.
+          </Text>
+          
+          <ScrollView style={{ flex: 1 }}>
+            {answers.length === 0 && (
+              <Text style={{ color: colors.textTertiary, textAlign: 'center', marginTop: spacing.xl }}>No history to erase.</Text>
+            )}
+            {answers.map((qa, i) => (
+              <AnimatedPressable 
+                key={i} 
+                style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: spacing.md, borderRadius: radius.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.electricViolet }}
+                onPress={() => applyRetcon(i)}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1, marginRight: spacing.sm }}>
+                    <Text style={{ ...typography.caption, color: colors.textSecondary }}>Q{i+1}: {qa.question}</Text>
+                    <Text style={{ ...typography.bodyMedium, color: colors.textPrimary, marginTop: 4 }}>A: {String(qa.answer).toUpperCase()}</Text>
+                  </View>
+                  <Ionicons name="trash" size={20} color={colors.danger} />
+                </View>
+              </AnimatedPressable>
+            ))}
+          </ScrollView>
+          <SecondaryButton label="CANCEL" onPress={() => useGameStore.setState({ retconActive: false })} style={{ marginTop: spacing.md }} />
+        </View>
+      )}
 
       <BlackMarketModal visible={blackMarketVisible} onClose={() => setBlackMarketVisible(false)} />
     </SafeAreaView>

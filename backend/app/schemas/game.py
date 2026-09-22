@@ -43,3 +43,6 @@ class ConfirmGuessRequest(BaseModel):
 
 class DesperationRequest(BaseModel):
     clue: str
+
+class RetconRequest(BaseModel):
+    index: int

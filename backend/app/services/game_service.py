@@ -208,3 +208,32 @@ def get_transcript(game_id: UUID) -> Optional[str]:
     game.transcript = transcript
     games_db[game_id] = game
     return transcript
+
+def process_retcon(game_id: UUID, index: int) -> Optional[GameState]:
+    game = games_db.get(game_id)
+    if not game or index < 0 or index >= len(game.questions):
+        return None
+        
+    game.questions.pop(index)
+    game.answers.pop(index)
+    game.question_number -= 1
+    
+    from app.ai.candidate_service import generate_candidates
+    candidates = generate_candidates(game) if game.questions else []
+    game.candidates = candidates
+    game.snapshot.candidatesRemaining = len(candidates)
+    game.snapshot.topPossibilities = candidates[:20]
+    
+    games_db[game_id] = game
+    
+    config = {"configurable": {"thread_id": str(game_id)}}
+    graph = get_graph_for_game(game_id)
+    graph.update_state(config, {
+        "questions": game.questions,
+        "answers": game.answers,
+        "question_number": game.question_number,
+        "candidates": candidates,
+        "contradiction": None
+    })
+    
+    return game

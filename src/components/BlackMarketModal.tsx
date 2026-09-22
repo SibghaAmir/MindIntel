@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -77,6 +77,18 @@ export function BlackMarketModal({ visible, onClose }: BlackMarketModalProps) {
               <View style={styles.optionInfo}>
                 <Text style={styles.optionTitle}>The Polygraph (Cost: 30)</Text>
                 <Text style={styles.optionDesc}>Force the AI to reveal its exact current confidence percentage.</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.optionCard, intelCredits < 150 && styles.disabledOption]} 
+              onPress={() => handlePurchase(150, useGameStore.getState().enableRetcon)}
+              disabled={intelCredits < 150}
+            >
+              <Ionicons name="git-branch" size={24} color={colors.electricViolet} />
+              <View style={styles.optionInfo}>
+                <Text style={styles.optionTitle}>The Retcon Device (Cost: 150)</Text>
+                <Text style={styles.optionDesc}>Enter Timeline Modification mode to erase a single past question.</Text>
               </View>
             </TouchableOpacity>
           </View>

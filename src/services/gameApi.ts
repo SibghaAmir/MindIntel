@@ -147,4 +147,12 @@ export const gameApi = {
     const data = await fetchApi<{ transcript: string }>(`/games/${gameId}/transcript`);
     return data.transcript;
   },
+
+  applyRetcon: async (gameId: string, index: number): Promise<GameState> => {
+    const data = await fetchApi<BackendGameState>(`/games/${gameId}/retcon`, {
+      method: 'POST',
+      body: JSON.stringify({ index }),
+    });
+    return mapBackendStateToFrontend(data);
+  },
 };

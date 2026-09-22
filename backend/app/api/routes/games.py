@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from uuid import UUID
-from app.schemas.game import GameState, CreateGameRequest, AnswerRequest, ConfirmGuessRequest, HintResponse, DesperationRequest
+from app.schemas.game import GameState, CreateGameRequest, AnswerRequest, ConfirmGuessRequest, HintResponse, DesperationRequest, RetconRequest
 from app.services import game_service
 
 router = APIRouter()
@@ -58,6 +58,13 @@ def desperation_endpoint(game_id: UUID, request: DesperationRequest):
     game = game_service.process_desperation_clue(game_id, request)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
+    return game
+
+@router.post("/{game_id}/retcon", response_model=GameState)
+def retcon_endpoint(game_id: UUID, request: RetconRequest):
+    game = game_service.process_retcon(game_id, request.index)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found or invalid index")
     return game
 
 @router.get("/{game_id}/hint", response_model=HintResponse)

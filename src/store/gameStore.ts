@@ -47,9 +47,12 @@ interface GameStore extends GameState {
   factCheck: () => Promise<void>;
   
   polygraphActive: boolean;
+  retconActive: boolean;
   applyBribe: () => Promise<void>;
   applyAssassination: () => void;
   applyPolygraph: () => void;
+  enableRetcon: () => void;
+  applyRetcon: (index: number) => Promise<void>;
 }
 
 let caseCounter = 26;
@@ -78,6 +81,7 @@ function initialState(): GameState {
     evidenceBoard: [],
     factChecksRemaining: 0,
     polygraphActive: false,
+    retconActive: false,
   };
 }
 
@@ -286,6 +290,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   applyPolygraph: () => {
     set({ polygraphActive: true });
+  },
+
+  enableRetcon: () => {
+    set({ retconActive: true });
+  },
+
+  applyRetcon: async (index: number) => {
+    const state = get();
+    if (!state.gameId) return;
+    set({ isAnalyzing: true, apiError: null, retconActive: false }); // turn off retcon mode after use
+    try {
+      const newState = await gameApi.applyRetcon(state.gameId, index);
+      set({ ...newState, isAnalyzing: false });
+    } catch (e: any) {
+      set({ apiError: e.message || 'Failed to retcon history', isAnalyzing: false });
+    }
   },
 
   answerQuestion: async (answer) => {
