@@ -91,4 +91,5 @@ export interface CaseRecord {
   confidence: number;
   score: number;
   date: string;
+  questions?: string[];
 }

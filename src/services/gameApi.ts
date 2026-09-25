@@ -155,4 +155,11 @@ export const gameApi = {
     });
     return mapBackendStateToFrontend(data);
   },
+
+  analyzeProfile: async (history: string[][]): Promise<{ archetype: string, description: string, color: string }> => {
+    return fetchApi<{ archetype: string, description: string, color: string }>(`/games/profile`, {
+      method: 'POST',
+      body: JSON.stringify({ history }),
+    });
+  },
 };

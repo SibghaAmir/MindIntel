@@ -82,6 +82,19 @@ def get_transcript_endpoint(game_id: UUID):
     return {"transcript": transcript}
 
 from pydantic import BaseModel
+class ProfileRequest(BaseModel):
+    history: list[list[str]]
+
+class ProfileResponse(BaseModel):
+    archetype: str
+    description: str
+    color: str
+
+@router.post("/profile", response_model=ProfileResponse)
+def analyze_profile_endpoint(request: ProfileRequest):
+    from app.ai.profile_chain import generate_profile
+    return generate_profile(request.history)
+
 class LearnRequest(BaseModel):
     subject: str
     category: str

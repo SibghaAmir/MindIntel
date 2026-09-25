@@ -81,6 +81,7 @@ export default function ResultScreen() {
       confidence: guess?.confidence ?? 0,
       score,
       date: new Date().toISOString().slice(0, 10),
+      questions: useGameStore.getState().questions,
     };
     addCase(record);
     resetGame();
@@ -359,6 +360,7 @@ export default function ResultScreen() {
                   confidence: 0,
                   score: gauntlet.cumulativeScore + (playerWon ? score : 0),
                   date: new Date().toISOString().slice(0, 10),
+                  questions: useGameStore.getState().questions,
                 };
                 addCase(record);
                 endGauntlet();

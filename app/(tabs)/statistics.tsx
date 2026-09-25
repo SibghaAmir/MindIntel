@@ -10,7 +10,7 @@ export default function StatisticsScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles(colors, gradients);
 
-  const record = useCasesStore((s) => s.record);
+  const { record, archetype, archetypeDescription, archetypeColor, casesSinceProfile, fetchProfile } = useCasesStore();
   const total = record.aiWins + record.playerWins || 1;
   const aiWinRate = Math.round((record.aiWins / total) * 100);
   const playerWinRate = 100 - aiWinRate;
@@ -34,6 +34,32 @@ export default function StatisticsScreen() {
           <Text style={typography.eyebrow}>Best Score</Text>
           <Text style={styles.bestScoreValue}>{record.bestScore}</Text>
           <Text style={styles.bestScoreCaption}>Set across {record.totalCases} investigations</Text>
+        </GlassCard>
+
+        <SectionHeader title="Psychological Profile" style={styles.sectionSpacing} />
+        <GlassCard>
+          {archetype ? (
+            <>
+              <Text style={{ ...typography.h3, color: archetypeColor || colors.electricViolet, marginBottom: spacing.xs }}>
+                {archetype}
+              </Text>
+              <Text style={{ ...typography.bodyMedium, color: colors.textSecondary }}>
+                {archetypeDescription}
+              </Text>
+            </>
+          ) : (
+            <Text style={{ ...typography.bodyMedium, color: colors.textTertiary }}>
+              Complete {Math.max(0, 5 - casesSinceProfile)} more cases to generate a psychological profile.
+            </Text>
+          )}
+          {casesSinceProfile >= 5 && (
+            <SecondaryButton 
+              label="RE-ANALYZE PROFILE" 
+              icon="refresh" 
+              onPress={() => fetchProfile()} 
+              style={{ marginTop: spacing.md }}
+            />
+          )}
         </GlassCard>
 
         <SectionHeader title="AI vs Player" style={styles.sectionSpacing} />

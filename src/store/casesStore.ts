@@ -31,6 +31,12 @@ interface CasesStore {
   setHasHydrated: (value: boolean) => void;
   clearRecentUnlocks: () => void;
   completeTutorial: () => void;
+  
+  archetype: string | null;
+  archetypeDescription: string | null;
+  archetypeColor: string | null;
+  casesSinceProfile: number;
+  fetchProfile: () => Promise<void>;
 }
 
 function computeStreak(cases: CaseRecord[]): { currentStreak: number; lastPlayDate: string } {
@@ -116,18 +122,46 @@ export const useCasesStore = create<CasesStore>()(
       hasSeenTutorial: false,
       unlockedAchievements: [],
       recentUnlocks: [],
+      
+      archetype: null,
+      archetypeDescription: null,
+      archetypeColor: null,
+      casesSinceProfile: 0,
 
       addCase: (record) => {
         const cases = [record, ...get().cases];
         const newRecord = recomputeRecord(cases);
         const newlyUnlocked = checkAchievements(newRecord, record, get().unlockedAchievements);
+        const newSinceProfile = get().casesSinceProfile + 1;
         
         set({
           cases,
           record: newRecord,
           unlockedAchievements: [...get().unlockedAchievements, ...newlyUnlocked],
           recentUnlocks: newlyUnlocked.length > 0 ? newlyUnlocked : get().recentUnlocks,
+          casesSinceProfile: newSinceProfile,
         });
+      },
+
+      fetchProfile: async () => {
+        const { cases } = get();
+        // get last 5 cases that have questions
+        const casesWithQuestions = cases.filter(c => c.questions && c.questions.length > 0).slice(0, 5);
+        if (casesWithQuestions.length === 0) return;
+        
+        const history = casesWithQuestions.map(c => c.questions!);
+        try {
+          const { gameApi } = await import('@/src/services/gameApi');
+          const profile = await gameApi.analyzeProfile(history);
+          set({
+            archetype: profile.archetype,
+            archetypeDescription: profile.description,
+            archetypeColor: profile.color,
+            casesSinceProfile: 0,
+          });
+        } catch (e) {
+          console.warn("Failed to fetch profile", e);
+        }
       },
 
       setHasHydrated: (value) => set({ hasHydrated: value }),
