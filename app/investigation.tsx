@@ -42,6 +42,12 @@ function coreStateForConfidence(confidence: number): CoreState {
   return 'thinking';
 }
 
+function scrambleText(text: string): string {
+  if (Math.random() > 0.4) return text;
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*!';
+  return text.split('').map(c => (c === ' ' ? ' ' : chars[Math.floor(Math.random() * chars.length)])).join('');
+}
+
 function TimeAttackBar({ active, onExpire, questionKey }: { active: boolean, onExpire: () => void, questionKey: number }) {
   const { colors } = useTheme();
   const progress = useSharedValue(1);
@@ -75,6 +81,7 @@ export default function InvestigationScreen() {
   const { colors, gradients } = useTheme();
   const styles = useStyles(colors, gradients);
   const baseTimeAttack = useSettingsStore((s) => s.timeAttack);
+  const blackoutMode = useSettingsStore((s) => s.blackoutMode);
   const personality = useGameStore((s) => s.personality);
   const timeAttack = baseTimeAttack || personality === 'bad_cop';
 
@@ -208,7 +215,7 @@ export default function InvestigationScreen() {
           message={
             isThinking
               ? "Communicating with backend..."
-              : (status === 'desperation' ? "I cannot compute an answer. Give me one final clue." : ((mode === 'reverse' || mode === 'deception') ? "Ask me a Yes/No question, or guess!" : (polygraphActive ? `Current Confidence: ${confidence}%` : "I'm narrowing down the possibilities.")))
+              : (status === 'desperation' ? "I cannot compute an answer. Give me one final clue." : ((mode === 'reverse' || mode === 'deception') ? "Ask me a Yes/No question, or guess!" : (polygraphActive ? `Current Confidence: ${confidence}%` : (blackoutMode ? "ERR: [SENSORS OFFLINE]" : "I'm narrowing down the possibilities."))))
           }
           coreState={isThinking ? 'thinking' : (status === 'desperation' ? 'highConfidence' : coreStateForConfidence(confidence))}
         />
@@ -239,9 +246,9 @@ export default function InvestigationScreen() {
             )}
             {answers.map((qa, i) => (
               <View key={i} style={styles.reverseQARow}>
-                <Text style={styles.reverseQText}>Q: {qa.question}</Text>
+                <Text style={styles.reverseQText}>Q: {blackoutMode ? scrambleText(qa.question) : qa.question}</Text>
                 <Text style={[styles.reverseAText, qa.answer === 'yes' ? { color: colors.success } : qa.answer === 'no' ? { color: colors.danger } : { color: colors.warning }]}>
-                  A: {String(qa.answer || '').toUpperCase()}
+                  A: {blackoutMode ? scrambleText(String(qa.answer || '').toUpperCase()) : String(qa.answer || '').toUpperCase()}
                 </Text>
               </View>
             ))}
@@ -381,43 +388,51 @@ export default function InvestigationScreen() {
           <GlassCard style={styles.dataPanel} secondary>
             <Text style={typography.eyebrow}>AI Investigation Data</Text>
 
-            <Text style={styles.dataSubheading}>Likely Category</Text>
-            {snapshot.categoryBreakdown.map((item) => (
-              <ConfidenceBar key={item.label} label={item.label} percentage={item.percentage} />
-            ))}
+            {blackoutMode ? (
+              <Text style={{ ...typography.bodyMedium, color: colors.danger, marginTop: spacing.md, textAlign: 'center', paddingVertical: spacing.xl }}>
+                [SENSORY DEPRIVATION ERROR: DATA FEED SEVERED]
+              </Text>
+            ) : (
+              <>
+                <Text style={styles.dataSubheading}>Likely Category</Text>
+                {snapshot.categoryBreakdown.map((item) => (
+                  <ConfidenceBar key={item.label} label={item.label} percentage={item.percentage} />
+                ))}
 
-            <View style={styles.metricRow}>
-              <View style={styles.metricBox}>
-                <Text style={styles.metricValue}>{snapshot.candidatesRemaining}</Text>
-                <Text style={styles.metricLabel}>Candidates Remaining</Text>
-              </View>
-              <View style={styles.metricBox}>
-                <Text style={[styles.metricValue, { color: colors.glowBlue }]}>
-                  {snapshot.aiConfidence}%
-                </Text>
-                <Text style={styles.metricLabel}>AI Confidence</Text>
-              </View>
-            </View>
-            <ConfidenceBar
-              label="Confidence"
-              percentage={snapshot.aiConfidence}
-              color={colors.electricViolet}
-              showValue={false}
-            />
-
-            <Text style={[styles.dataSubheading, { marginTop: spacing.sm }]}>Evidence Board</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {evidenceBoard.map((item) => (
-                <View key={item.id} style={{ width: '33%' }}>
-                  <SuspectCard name={item.name} status={item.status} />
+                <View style={styles.metricRow}>
+                  <View style={styles.metricBox}>
+                    <Text style={styles.metricValue}>{snapshot.candidatesRemaining}</Text>
+                    <Text style={styles.metricLabel}>Candidates Remaining</Text>
+                  </View>
+                  <View style={styles.metricBox}>
+                    <Text style={[styles.metricValue, { color: colors.glowBlue }]}>
+                      {snapshot.aiConfidence}%
+                    </Text>
+                    <Text style={styles.metricLabel}>AI Confidence</Text>
+                  </View>
                 </View>
-              ))}
-              {evidenceBoard.length === 0 && (
-                <Text style={{ ...typography.caption, color: colors.textTertiary, paddingVertical: spacing.md }}>
-                  Awaiting suspect data...
-                </Text>
-              )}
-            </View>
+                <ConfidenceBar
+                  label="Confidence"
+                  percentage={snapshot.aiConfidence}
+                  color={colors.electricViolet}
+                  showValue={false}
+                />
+
+                <Text style={[styles.dataSubheading, { marginTop: spacing.sm }]}>Evidence Board</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {evidenceBoard.map((item) => (
+                    <View key={item.id} style={{ width: '33%' }}>
+                      <SuspectCard name={item.name} status={item.status} />
+                    </View>
+                  ))}
+                  {evidenceBoard.length === 0 && (
+                    <Text style={{ ...typography.caption, color: colors.textTertiary, paddingVertical: spacing.md }}>
+                      Awaiting suspect data...
+                    </Text>
+                  )}
+                </View>
+              </>
+            )}
           </GlassCard>
         )}
       </ScrollView>
@@ -441,8 +456,8 @@ export default function InvestigationScreen() {
               >
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View style={{ flex: 1, marginRight: spacing.sm }}>
-                    <Text style={{ ...typography.caption, color: colors.textSecondary }}>Q{i+1}: {qa.question}</Text>
-                    <Text style={{ ...typography.bodyMedium, color: colors.textPrimary, marginTop: 4 }}>A: {String(qa.answer).toUpperCase()}</Text>
+                    <Text style={{ ...typography.caption, color: colors.textSecondary }}>Q{i+1}: {blackoutMode ? scrambleText(qa.question) : qa.question}</Text>
+                    <Text style={{ ...typography.bodyMedium, color: colors.textPrimary, marginTop: 4 }}>A: {blackoutMode ? scrambleText(String(qa.answer).toUpperCase()) : String(qa.answer).toUpperCase()}</Text>
                   </View>
                   <Ionicons name="trash" size={20} color={colors.danger} />
                 </View>

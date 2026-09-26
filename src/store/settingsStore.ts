@@ -10,10 +10,12 @@ interface SettingsStore {
   personality: AIPersonality;
   darkTheme: boolean;
   timeAttack: boolean;
+  blackoutMode: boolean;
   toggleSound: () => void;
   toggleHaptics: () => void;
   toggleDarkTheme: () => void;
   toggleTimeAttack: () => void;
+  toggleBlackoutMode: () => void;
   setDifficulty: (difficulty: Difficulty) => void;
   setPersonality: (personality: AIPersonality) => void;
 }
@@ -25,10 +27,12 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   personality: 'analytical',
   darkTheme: true,
   timeAttack: false,
+  blackoutMode: false,
   toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
   toggleHaptics: () => set((s) => ({ hapticsEnabled: !s.hapticsEnabled })),
   toggleDarkTheme: () => set((s) => ({ darkTheme: !s.darkTheme })),
   toggleTimeAttack: () => set((s) => ({ timeAttack: !s.timeAttack })),
+  toggleBlackoutMode: () => set((s) => ({ blackoutMode: !s.blackoutMode })),
   setDifficulty: (difficulty) => set({ difficulty }),
   setPersonality: (personality) => set({ personality }),
 }));

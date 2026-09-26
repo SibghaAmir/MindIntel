@@ -150,6 +150,19 @@ export default function SettingsScreen() {
               />
             }
           />
+          <View style={styles.divider} />
+          <SettingRow
+            icon="eye-off-outline"
+            label="Blackout Mode (Extreme)"
+            right={
+              <Switch
+                value={useSettingsStore().blackoutMode}
+                onValueChange={() => useSettingsStore.getState().toggleBlackoutMode()}
+                trackColor={{ false: colors.cardSecondary, true: colors.danger }}
+                thumbColor={colors.textPrimary}
+              />
+            }
+          />
         </GlassCard>
 
         <SectionHeader title="Appearance" style={styles.sectionHeader} />
