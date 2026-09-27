@@ -65,8 +65,12 @@ export default function ResultScreen() {
   const handleNewCase = () => {
     let earnedCredits = 0;
     if (playerWon) {
-      const remaining = maxQuestions - questionNumber;
-      earnedCredits = 50 + (remaining * 10);
+      if (useGameStore.getState().bountyAmount) {
+        earnedCredits = useGameStore.getState().bountyAmount!;
+      } else {
+        const remaining = maxQuestions - questionNumber;
+        earnedCredits = 50 + (remaining * 10);
+      }
       import('@/src/store/economyStore').then(m => m.useEconomyStore.getState().addCredits(earnedCredits));
     }
 
@@ -175,7 +179,7 @@ export default function ResultScreen() {
           {isAiWin ? (
             <>
               <Text style={styles.headline}>
-                {gauntlet.active ? 'GAUNTLET FAILED' : (mode === 'reverse' ? 'CASE UNSOLVED' : 'CASE CLOSED')}
+                {gauntlet.active ? 'GAUNTLET FAILED' : (mode === 'reverse' ? (useGameStore.getState().bountyAmount ? 'BOUNTY FAILED' : 'CASE UNSOLVED') : 'CASE CLOSED')}
               </Text>
               <Text style={styles.subheadline}>
                 {gauntlet.active ? 'You were defeated' : (mode === 'reverse' ? 'You Ran Out of Questions' : 'Subject Identified')}
@@ -218,10 +222,10 @@ export default function ResultScreen() {
           ) : (
             <>
               <Text style={styles.headline}>
-                {gauntlet.active ? (gauntlet.stage === 3 ? 'GAUNTLET COMPLETE' : `STAGE ${gauntlet.stage} CLEARED`) : (mode === 'reverse' ? 'CASE CLOSED' : 'CASE UNSOLVED')}
+                {gauntlet.active ? (gauntlet.stage === 3 ? 'GAUNTLET COMPLETE' : `STAGE ${gauntlet.stage} CLEARED`) : (mode === 'reverse' ? (useGameStore.getState().bountyAmount ? 'BOUNTY CLAIMED' : 'CASE CLOSED') : 'CASE UNSOLVED')}
               </Text>
               <Text style={styles.subheadline}>
-                {gauntlet.active ? 'You survived the interrogation!' : (mode === 'reverse' ? 'You Guessed the Secret Subject!' : 'You Outsmarted the AI')}
+                {gauntlet.active ? 'You survived the interrogation!' : (mode === 'reverse' ? (useGameStore.getState().bountyAmount ? `You earned ${useGameStore.getState().bountyAmount} IC` : 'You Guessed the Secret Subject!') : 'You Outsmarted the AI')}
               </Text>
 
               <View style={styles.statsRow}>

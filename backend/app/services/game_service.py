@@ -33,6 +33,15 @@ def create_game(request: CreateGameRequest) -> GameState:
     else:
         max_questions = 20
     
+    target_entity = None
+    if request.mode in ["reverse", "deception"]:
+        if request.subject:
+            target_entity = request.subject
+        else:
+            import random
+            from app.ai.kb.data import SAMPLE_ENTITIES
+            target_entity = random.choice(SAMPLE_ENTITIES)["name"]
+
     initial_state = {
         "game_id": str(game_id),
         "category": request.category,
@@ -49,7 +58,7 @@ def create_game(request: CreateGameRequest) -> GameState:
         "current_question": None,
         "guess": None,
         "reason": None,
-        "target_entity": None,
+        "target_entity": target_entity,
         "contradiction": None,
         "is_daily": False,
         "has_lied": False,

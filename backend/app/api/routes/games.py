@@ -114,3 +114,20 @@ def learn_subject_endpoint(request: LearnRequest):
         "attributes": {}
     })
     return {"status": "success", "message": f"Learned {request.subject}"}
+from pydantic import BaseModel
+
+class CreateDeadDropRequest(BaseModel):
+    creator: str
+    subject: str
+    bounty: int
+    category: str
+
+@router.post("/deaddrops")
+def create_deaddrop(request: CreateDeadDropRequest):
+    from app.services.deaddrop_service import create_dead_drop
+    return create_dead_drop(request)
+
+@router.get("/deaddrops")
+def list_deaddrops():
+    from app.services.deaddrop_service import get_dead_drops
+    return get_dead_drops()

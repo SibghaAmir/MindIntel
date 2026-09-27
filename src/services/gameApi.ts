@@ -71,10 +71,10 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
 };
 
 export const gameApi = {
-  createGame: async (category: string, mode: string, difficulty: string, personality: string): Promise<GameState> => {
+  createGame: async (category: string, mode: string, difficulty: string, personality: string, subject?: string): Promise<GameState> => {
     const backendState = await fetchApi<BackendGameState>('/games', {
       method: 'POST',
-      body: JSON.stringify({ category, mode, difficulty, personality }),
+      body: JSON.stringify({ category, mode, difficulty, personality, subject }),
     });
     return mapBackendStateToFrontend(backendState);
   },
@@ -160,6 +160,17 @@ export const gameApi = {
     return fetchApi<{ archetype: string, description: string, color: string }>(`/games/profile`, {
       method: 'POST',
       body: JSON.stringify({ history }),
+    });
+  },
+
+  getDeadDrops: async () => {
+    return fetchApi<any[]>(`/games/deaddrops`);
+  },
+
+  createDeadDrop: async (creator: string, subject: string, bounty: number, category: string) => {
+    return fetchApi<any>(`/games/deaddrops`, {
+      method: 'POST',
+      body: JSON.stringify({ creator, subject, bounty, category }),
     });
   },
 };

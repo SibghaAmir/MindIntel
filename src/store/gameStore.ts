@@ -15,6 +15,7 @@ interface GameStore extends GameState {
   selectedMode: InvestigationMode;
   isAnalyzing: boolean;
   apiError: string | null;
+  bountyAmount?: number;
   setCategory: (category: CaseCategoryId) => void;
   setMode: (mode: InvestigationMode) => void;
   startInvestigation: () => Promise<void>;
@@ -53,6 +54,7 @@ interface GameStore extends GameState {
   applyPolygraph: () => void;
   enableRetcon: () => void;
   applyRetcon: (index: number) => Promise<void>;
+  startDeadDropGame: (subject: string, category: string, bounty: number) => Promise<void>;
 }
 
 let caseCounter = 26;
@@ -243,6 +245,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch (error: any) {
       set({
         apiError: error.message || 'Failed to start deception mode.',
+        isAnalyzing: false,
+      });
+    }
+  },
+
+  startDeadDropGame: async (subject: string, category: string, bounty: number) => {
+    caseCounter += 1;
+    useSettingsStore.getState().setTimeAttack(false);
+    
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } });
+
+    try {
+      const newState = await gameApi.createGame(category, 'reverse', 'normal', useSettingsStore.getState().personality, subject);
+      
+      set({
+        ...newState,
+        caseNumber: caseCounter,
+        isAnalyzing: false,
+        evidenceBoard: [], // Reversed mode doesn't use board
+        bountyAmount: bounty,
+      });
+    } catch (error: any) {
+      set({
+        apiError: error.message || 'Failed to start dead drop.',
         isAnalyzing: false,
       });
     }
@@ -442,5 +468,5 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ status: 'lost' });
   },
 
-  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null, hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } }),
+  resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null, hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 }, bountyAmount: undefined }),
 }));

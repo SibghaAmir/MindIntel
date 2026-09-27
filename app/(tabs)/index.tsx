@@ -69,6 +69,12 @@ export default function HomeScreen() {
               style={styles.secondaryGap}
             />
             <SecondaryButton
+              label="DEAD DROP NETWORK"
+              icon="globe-outline"
+              onPress={() => router.push('/deaddrops')}
+              style={styles.secondaryGap}
+            />
+            <SecondaryButton
               label="ENTER THE GAUNTLET"
               icon="trophy-outline"
               onPress={() => {

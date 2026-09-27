@@ -34,6 +34,7 @@ class CreateGameRequest(BaseModel):
     mode: str
     difficulty: str = "normal"
     personality: str = "analytical"
+    subject: Optional[str] = None
 
 class AnswerRequest(BaseModel):
     answer: str
