@@ -55,6 +55,8 @@ interface GameStore extends GameState {
   enableRetcon: () => void;
   applyRetcon: (index: number) => Promise<void>;
   startDeadDropGame: (subject: string, category: string, bounty: number) => Promise<void>;
+  startDecoyMode: () => Promise<void>;
+  submitDecoyGuess: (target: string, decoy: string) => Promise<void>;
 }
 
 let caseCounter = 26;
@@ -245,6 +247,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch (error: any) {
       set({
         apiError: error.message || 'Failed to start deception mode.',
+        isAnalyzing: false,
+      });
+    }
+  },
+
+  startDecoyMode: async () => {
+    caseCounter += 1;
+    useSettingsStore.getState().setTimeAttack(false); // No time attack
+    
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } });
+
+    try {
+      const newState = await gameApi.createGame('anything', 'decoy', 'normal', useSettingsStore.getState().personality);
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      const updatedBoard = newPossibilities.slice(0, 9).map((p, i) => ({
+        id: `suspect-init-${i}-${p}`,
+        name: p,
+        status: 'active' as const
+      }));
+
+      set({
+        ...newState,
+        caseNumber: caseCounter,
+        isAnalyzing: false,
+        evidenceBoard: updatedBoard,
+        factChecksRemaining: 0,
+      });
+    } catch (error: any) {
+      set({
+        apiError: error.message || 'Failed to start decoy mode.',
         isAnalyzing: false,
       });
     }
@@ -466,6 +498,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   submitPlayerAnswer: (_subject) => {
     set({ status: 'lost' });
+  },
+
+  submitDecoyGuess: async (target: string, decoy: string) => {
+    const state = get();
+    if (!state.gameId) return;
+
+    set({ isAnalyzing: true, apiError: null });
+    try {
+      const newState = await gameApi.submitDecoyGuess(state.gameId, target, decoy);
+      if (newState.status === 'lost') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      } else if (newState.status === 'won') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
+    } catch (error: any) {
+      set({ apiError: error.message || 'Error submitting decoy guess.', isAnalyzing: false });
+    }
   },
 
   resetGame: () => set({ ...initialState(), isAnalyzing: false, apiError: null, hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 }, bountyAmount: undefined }),

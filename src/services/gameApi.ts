@@ -131,6 +131,14 @@ export const gameApi = {
     return mapBackendStateToFrontend(data);
   },
 
+  submitDecoyGuess: async (gameId: string, target: string, decoy: string): Promise<GameState> => {
+    const data = await fetchApi<BackendGameState>(`/games/${gameId}/decoy-guess`, {
+      method: 'POST',
+      body: JSON.stringify({ target, decoy }),
+    });
+    return mapBackendStateToFrontend(data);
+  },
+
   learnSubject: async (subject: string, category: string): Promise<void> => {
     await fetchApi('/games/learn/subject', {
       method: 'POST',

@@ -131,3 +131,11 @@ def create_deaddrop(request: CreateDeadDropRequest):
 def list_deaddrops():
     from app.services.deaddrop_service import get_dead_drops
     return get_dead_drops()
+
+@router.post("/{game_id}/decoy-guess", response_model=GameState)
+def submit_decoy_guess(game_id: UUID, request: DecoyGuessRequest):
+    from app.services.game_service import process_decoy_guess
+    game = process_decoy_guess(game_id, request)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found or not in decoy mode")
+    return game

@@ -60,6 +60,15 @@ export default function HomeScreen() {
               style={styles.secondaryGap}
             />
             <SecondaryButton
+              label="THE DECOY PROTOCOL"
+              icon="git-network-outline"
+              onPress={() => {
+                useGameStore.getState().startDecoyMode();
+                router.push('/investigation');
+              }}
+              style={styles.secondaryGap}
+            />
+            <SecondaryButton
               label="THE LIAR'S PARADOX"
               icon="alert-circle-outline"
               onPress={() => {

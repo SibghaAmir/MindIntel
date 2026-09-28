@@ -28,6 +28,7 @@ class GameState(BaseModel):
     desperation_clue: Optional[str] = None
     pending_desperation_clue: Optional[str] = None
     transcript: Optional[str] = None
+    decoy_entity: Optional[str] = None
 
 class CreateGameRequest(BaseModel):
     category: str
@@ -47,3 +48,7 @@ class DesperationRequest(BaseModel):
 
 class RetconRequest(BaseModel):
     index: int
+
+class DecoyGuessRequest(BaseModel):
+    target: str
+    decoy: str

@@ -22,6 +22,7 @@ class GraphState(TypedDict):
     guess: Optional[str]
     reason: Optional[str]
     target_entity: Optional[str]
+    decoy_entity: Optional[str]
     has_lied: Optional[bool]
     lie_index: Optional[int]
     
@@ -32,7 +33,14 @@ class GraphState(TypedDict):
 def init_reverse_state(state: GraphState) -> dict:
     if not state.get("target_entity"):
         target = pick_target_entity(state["category"])
-        return {"target_entity": target, "status": "playing"}
+        decoy = None
+        if state.get("mode") == "decoy":
+            while True:
+                d = pick_target_entity(state["category"])
+                if d != target:
+                    decoy = d
+                    break
+        return {"target_entity": target, "decoy_entity": decoy, "status": "playing"}
     return {}
 
 def evaluate_question(state: GraphState) -> dict:
@@ -41,7 +49,8 @@ def evaluate_question(state: GraphState) -> dict:
         return {}
     
     target = state.get("target_entity")
-    ans = evaluate_player_question(target, question)
+    decoy = state.get("decoy_entity")
+    ans = evaluate_player_question(target, question, decoy)
     
     # Deception mechanic
     mode = state.get("mode", "reverse")

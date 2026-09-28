@@ -15,12 +15,12 @@ def extract_game_state(graph_state: dict) -> GameState:
 
 def get_graph_for_game(game_id: UUID) -> object:
     game = games_db.get(game_id)
-    if game and game.mode in ["reverse", "deception"]:
+    if game and game.mode in ["reverse", "deception", "decoy"]:
         return reverse_graph
     return app_graph
 
 def get_graph_for_mode(mode: str) -> object:
-    if mode in ["reverse", "deception"]:
+    if mode in ["reverse", "deception", "decoy"]:
         return reverse_graph
     return app_graph
 
@@ -34,13 +34,21 @@ def create_game(request: CreateGameRequest) -> GameState:
         max_questions = 20
     
     target_entity = None
-    if request.mode in ["reverse", "deception"]:
+    decoy_entity = None
+    if request.mode in ["reverse", "deception", "decoy"]:
+        import random
+        from app.ai.kb.data import SAMPLE_ENTITIES
         if request.subject:
             target_entity = request.subject
         else:
-            import random
-            from app.ai.kb.data import SAMPLE_ENTITIES
             target_entity = random.choice(SAMPLE_ENTITIES)["name"]
+            
+        if request.mode == "decoy":
+            while True:
+                d = random.choice(SAMPLE_ENTITIES)["name"]
+                if d != target_entity:
+                    decoy_entity = d
+                    break
 
     initial_state = {
         "game_id": str(game_id),
@@ -59,6 +67,7 @@ def create_game(request: CreateGameRequest) -> GameState:
         "guess": None,
         "reason": None,
         "target_entity": target_entity,
+        "decoy_entity": decoy_entity,
         "contradiction": None,
         "is_daily": False,
         "has_lied": False,
@@ -245,4 +254,24 @@ def process_retcon(game_id: UUID, index: int) -> Optional[GameState]:
         "contradiction": None
     })
     
+    return game
+
+def process_decoy_guess(game_id: UUID, request: DecoyGuessRequest) -> Optional[GameState]:
+    game = games_db.get(game_id)
+    if not game or game.mode != "decoy":
+        return None
+        
+    game.question_number += 1
+    
+    target_correct = request.target.strip().lower() == game.target_entity.strip().lower()
+    decoy_correct = request.decoy.strip().lower() == game.decoy_entity.strip().lower()
+    
+    if target_correct and decoy_correct:
+        game.status = "won"
+        game.guess = request.target
+    else:
+        game.status = "lost"
+        game.guess = request.target
+        
+    games_db[game_id] = game
     return game

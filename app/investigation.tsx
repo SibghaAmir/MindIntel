@@ -228,7 +228,7 @@ export default function InvestigationScreen() {
           />
         )}
 
-        {mode === 'reverse' || mode === 'deception' ? (
+        {mode === 'reverse' || mode === 'deception' || mode === 'decoy' ? (
           <View style={styles.reverseWrap}>
             {mode === 'deception' && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
@@ -242,6 +242,11 @@ export default function InvestigationScreen() {
                     style={{ paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, minHeight: 0 }}
                   />
                 )}
+              </View>
+            )}
+            {mode === 'decoy' && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                <Text style={{ ...typography.caption, color: colors.electricViolet }}>THE DECOY PROTOCOL ACTIVE</Text>
               </View>
             )}
             {answers.map((qa, i) => (
@@ -281,6 +286,16 @@ export default function InvestigationScreen() {
                 <Ionicons name="send" size={18} color="#fff" />
               </AnimatedPressable>
             </View>
+
+            {mode === 'decoy' && (
+              <SecondaryButton
+                label="SUBMIT PROTOCOL GUESS"
+                icon="checkmark-done"
+                onPress={() => useGameStore.setState({ retconActive: false /* fallback */, decoyGuessVisible: true } as any)}
+                disabled={isThinking}
+                style={{ marginTop: spacing.md, borderColor: colors.electricViolet }}
+              />
+            )}
           </View>
         ) : status === 'desperation' ? (
           <GlassCard style={{ borderColor: colors.danger, borderWidth: 2, padding: spacing.lg, marginBottom: spacing.md }}>
@@ -468,8 +483,64 @@ export default function InvestigationScreen() {
         </View>
       )}
 
+      {(useGameStore.getState() as any).decoyGuessVisible && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 200, padding: spacing.lg, paddingTop: 60 }]}>
+          <Text style={{ ...typography.h2, color: colors.electricViolet, marginBottom: spacing.md, textAlign: 'center' }}>SUBMIT PROTOCOL GUESS</Text>
+          <Text style={{ ...typography.bodyMedium, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+            To crack the Decoy Protocol, you must accurately guess BOTH the true subject and the decoy.
+          </Text>
+          <DecoyGuessForm onClose={() => useGameStore.setState({ decoyGuessVisible: false } as any)} />
+        </View>
+      )}
+
       <BlackMarketModal visible={blackMarketVisible} onClose={() => setBlackMarketVisible(false)} />
     </SafeAreaView>
+  );
+}
+
+function DecoyGuessForm({ onClose }: { onClose: () => void }) {
+  const { colors } = useTheme();
+  const [target, setTarget] = useState('');
+  const [decoy, setDecoy] = useState('');
+  const { isAnalyzing, submitDecoyGuess } = useGameStore();
+
+  const handleSubmit = async () => {
+    if (!target.trim() || !decoy.trim()) return;
+    await submitDecoyGuess(target.trim(), decoy.trim());
+    onClose();
+  };
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center' }}>
+      <GlassCard style={{ padding: spacing.lg }}>
+        <Text style={{ ...typography.caption, color: colors.textSecondary, marginBottom: 4 }}>True Subject</Text>
+        <TextInput
+          style={{ backgroundColor: 'rgba(0,0,0,0.3)', borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 8, padding: spacing.md, color: colors.textPrimary, marginBottom: spacing.md }}
+          placeholder="What is the real answer?"
+          placeholderTextColor={colors.textTertiary}
+          value={target}
+          onChangeText={setTarget}
+          editable={!isAnalyzing}
+        />
+        <Text style={{ ...typography.caption, color: colors.textSecondary, marginBottom: 4 }}>Decoy Subject</Text>
+        <TextInput
+          style={{ backgroundColor: 'rgba(0,0,0,0.3)', borderWidth: 1, borderColor: colors.borderStrong, borderRadius: 8, padding: spacing.md, color: colors.textPrimary, marginBottom: spacing.lg }}
+          placeholder="What was the AI steering you towards?"
+          placeholderTextColor={colors.textTertiary}
+          value={decoy}
+          onChangeText={setDecoy}
+          editable={!isAnalyzing}
+        />
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <View style={{ flex: 1 }}>
+            <SecondaryButton label="CANCEL" onPress={onClose} disabled={isAnalyzing} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <SecondaryButton label="SUBMIT" icon="send" onPress={handleSubmit} disabled={isAnalyzing || !target.trim() || !decoy.trim()} />
+          </View>
+        </View>
+      </GlassCard>
+    </View>
   );
 }
 

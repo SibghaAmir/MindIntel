@@ -1,4 +1,4 @@
-﻿from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from pydantic import BaseModel, Field
@@ -14,10 +14,16 @@ def pick_target_entity(category: str) -> str:
         return random.choice(valid)
     return "Iron Man" if category.lower() != "animals" else "Lion"
 
-def evaluate_player_question(target: str, question: str) -> str:
+def evaluate_player_question(target: str, question: str, decoy: str = None) -> str:
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    
+    if decoy:
+        sys_msg = f"You are playing 'The Decoy Protocol'. The actual subject is '{target}', but you are secretly trying to steer the player to guess the decoy: '{decoy}'. The player asks a yes/no question. Answer 'yes', 'no', or 'maybe' based on '{target}', UNLESS answering misleadingly helps steer them toward '{decoy}'. If they explicitly guess either the target or decoy, answer 'guess_incorrect' (they must submit the final dual-guess through the system, not through questions). Output ONLY JSON with the 'answer' field."
+    else:
+        sys_msg = f"You are playing 20 Questions. You are thinking of the entity: '{target}'. The player asks you a question. You must answer 'yes', 'no', or 'maybe'. If the player is directly guessing the entity (e.g., 'Is it Batman?'), and it is correct, answer 'guess_correct'. If they guess wrong, answer 'guess_incorrect'. Output ONLY JSON with the 'answer' field."
+
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are playing 20 Questions. You are thinking of the entity: '{target}'. The player asks you a question. You must answer 'yes', 'no', or 'maybe'. If the player is directly guessing the entity (e.g., 'Is it Batman?'), and it is correct, answer 'guess_correct'. If they guess wrong, answer 'guess_incorrect'. Output ONLY JSON with the 'answer' field."),
+        ("system", sys_msg),
         ("user", "{question}")
     ])
     parser = JsonOutputParser(pydantic_object=ReverseAnswer)
