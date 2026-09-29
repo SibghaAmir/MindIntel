@@ -145,6 +145,34 @@ export default function InvestigationScreen() {
     }
   }, [apiError]);
 
+  useEffect(() => {
+    if (status === 'guessing' && useGameStore.getState().guess?.name) {
+      import('@/src/services/audioManager').then(({ audioManager }) => {
+        audioManager.speak(`Is it... ${useGameStore.getState().guess?.name}?`);
+      });
+      return;
+    }
+    
+    const isReverseFamily = mode === 'reverse' || mode === 'deception' || mode === 'decoy' || mode === 'syndicate';
+    
+    if (isReverseFamily) {
+      if (answers.length > 0 && !isAnalyzing) {
+        const lastAns = answers[answers.length - 1];
+        if (lastAns && lastAns.answer !== '...') {
+          import('@/src/services/audioManager').then(({ audioManager }) => {
+            audioManager.speak(lastAns.answer);
+          });
+        }
+      }
+    } else {
+      if (currentQuestion && status === 'playing' && !isAnalyzing) {
+        import('@/src/services/audioManager').then(({ audioManager }) => {
+          audioManager.speak(currentQuestion);
+        });
+      }
+    }
+  }, [currentQuestion, status, answers.length, isAnalyzing]);
+
   const handleAnswer = (value: AnswerValue) => {
     answerQuestion(value);
   };

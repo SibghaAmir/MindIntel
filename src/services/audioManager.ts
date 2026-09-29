@@ -58,6 +58,24 @@ class AudioManager {
   stopThinking() {
     this.thinkingSound?.stopAsync().catch(() => {});
   }
+
+  speak(text: string, options?: { pitch?: number; rate?: number; voice?: string }) {
+    if (!useSettingsStore.getState().soundEnabled) return;
+    import('expo-speech').then((Speech) => {
+      Speech.stop();
+      Speech.speak(text, {
+        pitch: options?.pitch ?? 1.0,
+        rate: options?.rate ?? 1.0,
+        voice: options?.voice,
+      });
+    });
+  }
+
+  stopSpeech() {
+    import('expo-speech').then((Speech) => {
+      Speech.stop();
+    });
+  }
 }
 
 export const audioManager = new AudioManager();

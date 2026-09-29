@@ -95,7 +95,7 @@ export function AIInvestigationCore({ state = 'idle', size = 200 }: AIInvestigat
           -1,
           true
         );
-        rotate.value = withRepeat(withTiming(360, { duration: 4000, easing: Easing.linear }), -1);
+        rotate.value = withRepeat(withTiming(360, { duration: 2200, easing: Easing.linear }), -1);
         ringOpacity.value = withRepeat(
           withSequence(withTiming(1.0, { duration: 800 }), withTiming(0.4, { duration: 800 })),
           -1,
@@ -106,28 +106,28 @@ export function AIInvestigationCore({ state = 'idle', size = 200 }: AIInvestigat
         // Faster pulse, stronger glow for high confidence
         pulse.value = withRepeat(
           withSequence(
-            withTiming(1.18, { duration: 400, easing: Easing.inOut(Easing.ease) }),
-            withTiming(1, { duration: 400, easing: Easing.inOut(Easing.ease) })
+            withTiming(1.22, { duration: 300, easing: Easing.inOut(Easing.ease) }),
+            withTiming(1, { duration: 300, easing: Easing.inOut(Easing.ease) })
           ),
           -1,
           true
         );
-        rotate.value = withRepeat(withTiming(360, { duration: 2500, easing: Easing.linear }), -1);
+        rotate.value = withRepeat(withTiming(360, { duration: 1500, easing: Easing.linear }), -1);
         glowScale.value = withRepeat(
-          withSequence(withTiming(1.5, { duration: 600 }), withTiming(1.1, { duration: 600 })),
+          withSequence(withTiming(1.6, { duration: 500 }), withTiming(1.2, { duration: 500 })),
           -1,
           true
         );
-        ringOpacity.value = withTiming(0.8);
+        ringOpacity.value = withTiming(0.9);
         break;
       case 'success':
         // Smooth reveal success state
         pulse.value = withSequence(
-          withTiming(1.35, { duration: 400, easing: Easing.out(Easing.exp) }),
-          withTiming(1.05, { duration: 600, easing: Easing.out(Easing.back(1.5)) })
+          withTiming(1.4, { duration: 500, easing: Easing.out(Easing.exp) }),
+          withTiming(1.1, { duration: 800, easing: Easing.out(Easing.back(1.2)) })
         );
-        glowScale.value = withTiming(1.4, { duration: 700, easing: Easing.out(Easing.ease) });
-        ringOpacity.value = withTiming(0.2, { duration: 500 });
+        glowScale.value = withTiming(1.5, { duration: 800, easing: Easing.out(Easing.ease) });
+        ringOpacity.value = withTiming(0.1, { duration: 500 });
         break;
       case 'failure':
         pulse.value = withSequence(

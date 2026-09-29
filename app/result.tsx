@@ -51,9 +51,15 @@ export default function ResultScreen() {
   useEffect(() => {
     if (!isAiWin) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      import('@/src/services/audioManager').then((m) => m.audioManager.playSuccess());
+      import('@/src/services/audioManager').then((m) => {
+        m.audioManager.playSuccess();
+        m.audioManager.speak("Case closed. You outsmarted me.");
+      });
     } else {
-      import('@/src/services/audioManager').then((m) => m.audioManager.playSuccess());
+      import('@/src/services/audioManager').then((m) => {
+        m.audioManager.playSuccess();
+        m.audioManager.speak(`I win. It was ${guess?.name || 'too easy'}.`);
+      });
     }
   }, [isAiWin]);
 
