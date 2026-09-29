@@ -228,7 +228,7 @@ export default function InvestigationScreen() {
           />
         )}
 
-        {mode === 'reverse' || mode === 'deception' || mode === 'decoy' ? (
+        {mode === 'reverse' || mode === 'deception' || mode === 'decoy' || mode === 'syndicate' ? (
           <View style={styles.reverseWrap}>
             {mode === 'deception' && (
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
@@ -249,11 +249,17 @@ export default function InvestigationScreen() {
                 <Text style={{ ...typography.caption, color: colors.electricViolet }}>THE DECOY PROTOCOL ACTIVE</Text>
               </View>
             )}
+            {mode === 'syndicate' && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                <Text style={{ ...typography.caption, color: colors.glowBlue }}>THE SYNDICATE ACTIVE</Text>
+              </View>
+            )}
             {answers.map((qa, i) => (
               <View key={i} style={styles.reverseQARow}>
                 <Text style={styles.reverseQText}>Q: {blackoutMode ? scrambleText(qa.question) : qa.question}</Text>
                 <Text style={[styles.reverseAText, qa.answer === 'yes' ? { color: colors.success } : qa.answer === 'no' ? { color: colors.danger } : { color: colors.warning }]}>
-                  A: {blackoutMode ? scrambleText(String(qa.answer || '').toUpperCase()) : String(qa.answer || '').toUpperCase()}
+                  {qa.agent ? `[${qa.agent.toUpperCase()}]: ` : 'A: '}
+                  {blackoutMode ? scrambleText(String(qa.answer || '').toUpperCase()) : String(qa.answer || '').toUpperCase()}
                 </Text>
               </View>
             ))}
@@ -266,26 +272,66 @@ export default function InvestigationScreen() {
                 value={reverseInput}
                 onChangeText={setReverseInput}
                 onSubmitEditing={() => {
-                  if (reverseInput.trim()) {
+                  if (reverseInput.trim() && mode !== 'syndicate') {
                     handleAnswer(reverseInput.trim());
                     setReverseInput('');
                   }
                 }}
                 editable={!isThinking}
               />
-              <AnimatedPressable
-                onPress={() => {
-                  if (reverseInput.trim()) {
-                    handleAnswer(reverseInput.trim());
-                    setReverseInput('');
-                  }
-                }}
-                disabled={isThinking || !reverseInput.trim()}
-                style={[styles.reverseSendBtn, { backgroundColor: colors.glowBlue }]}
-              >
-                <Ionicons name="send" size={18} color="#fff" />
-              </AnimatedPressable>
+              {mode !== 'syndicate' ? (
+                <AnimatedPressable
+                  onPress={() => {
+                    if (reverseInput.trim()) {
+                      handleAnswer(reverseInput.trim());
+                      setReverseInput('');
+                    }
+                  }}
+                  disabled={isThinking || !reverseInput.trim()}
+                  style={[styles.reverseSendBtn, { backgroundColor: colors.glowBlue }]}
+                >
+                  <Ionicons name="send" size={18} color="#fff" />
+                </AnimatedPressable>
+              ) : null}
             </View>
+            
+            {mode === 'syndicate' && (
+              <View style={{ flexDirection: 'row', gap: spacing.xs, marginTop: spacing.xs }}>
+                <SecondaryButton 
+                  label="SCIENTIST" 
+                  onPress={() => {
+                    if (reverseInput.trim()) {
+                      useGameStore.getState().askSyndicate(reverseInput.trim(), 'scientist');
+                      setReverseInput('');
+                    }
+                  }}
+                  disabled={isThinking || !reverseInput.trim()} 
+                  style={{ flex: 1, paddingVertical: 8, minHeight: 0 }} 
+                />
+                <SecondaryButton 
+                  label="HISTORIAN" 
+                  onPress={() => {
+                    if (reverseInput.trim()) {
+                      useGameStore.getState().askSyndicate(reverseInput.trim(), 'historian');
+                      setReverseInput('');
+                    }
+                  }}
+                  disabled={isThinking || !reverseInput.trim()} 
+                  style={{ flex: 1, paddingVertical: 8, minHeight: 0 }} 
+                />
+                <SecondaryButton 
+                  label="DETECTIVE" 
+                  onPress={() => {
+                    if (reverseInput.trim()) {
+                      useGameStore.getState().askSyndicate(reverseInput.trim(), 'detective');
+                      setReverseInput('');
+                    }
+                  }}
+                  disabled={isThinking || !reverseInput.trim()} 
+                  style={{ flex: 1, paddingVertical: 8, minHeight: 0 }} 
+                />
+              </View>
+            )}
 
             {mode === 'decoy' && (
               <SecondaryButton

@@ -24,8 +24,9 @@ export default function ResultScreen() {
     useGameStore();
   const addCase = useCasesStore((s) => s.addCase);
 
-  const isAiWin = mode === 'reverse' ? status === 'lost' : status === 'won';
-  const playerWon = mode === 'reverse' ? status === 'won' : status === 'lost';
+  const isReverseFamily = mode === 'reverse' || mode === 'deception' || mode === 'decoy' || mode === 'syndicate';
+  const isAiWin = isReverseFamily ? status === 'lost' : status === 'won';
+  const playerWon = isReverseFamily ? status === 'won' : status === 'lost';
 
   const [subjectInput, setSubjectInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -145,7 +146,7 @@ export default function ResultScreen() {
         }).join('');
         const winStr = playerWon ? questionNumber : 'X';
         message = `Kasoti Daily Cipher (${dateStr})\n${winStr}/${maxQuestions}\n\n${grid}\n\nCan you crack the cipher?`;
-      } else if (mode === 'reverse') {
+      } else if (isReverseFamily) {
         message = isAiWin
           ? `I just played Reverse Kasoti! The AI stumped me with '${guess?.name}' after ${maxQuestions} questions! Can you beat it?`
           : `I just beat Reverse Kasoti! I guessed the AI's secret subject ('${guess?.name}') in only ${questionNumber} questions!`;
@@ -179,10 +180,10 @@ export default function ResultScreen() {
           {isAiWin ? (
             <>
               <Text style={styles.headline}>
-                {gauntlet.active ? 'GAUNTLET FAILED' : (mode === 'reverse' ? (useGameStore.getState().bountyAmount ? 'BOUNTY FAILED' : 'CASE UNSOLVED') : 'CASE CLOSED')}
+                {gauntlet.active ? 'GAUNTLET FAILED' : (isReverseFamily ? (useGameStore.getState().bountyAmount ? 'BOUNTY FAILED' : 'CASE UNSOLVED') : 'CASE CLOSED')}
               </Text>
               <Text style={styles.subheadline}>
-                {gauntlet.active ? 'You were defeated' : (mode === 'reverse' ? 'You Ran Out of Questions' : 'Subject Identified')}
+                {gauntlet.active ? 'You were defeated' : (isReverseFamily ? 'You Ran Out of Questions' : 'Subject Identified')}
               </Text>
 
               <View style={styles.statsRow}>
@@ -201,7 +202,17 @@ export default function ResultScreen() {
                   />
                 )}
               </View>
-              {mode !== 'reverse' ? (
+                {isReverseFamily && (
+                  <StatCard
+                    label="Secret Subject"
+                    value={guess?.name || 'Unknown'}
+                    icon="person-outline"
+                    accentColor={colors.danger}
+                    style={styles.scoreCard}
+                  />
+                )}
+              </View>
+              {!isReverseFamily && (
                 <StatCard
                   label="Investigation Score"
                   value={score}
@@ -209,35 +220,27 @@ export default function ResultScreen() {
                   accentColor={colors.success}
                   style={styles.scoreCard}
                 />
-              ) : (
-                <StatCard
-                  label="Secret Subject"
-                  value={guess?.name || 'Unknown'}
-                  icon="person-outline"
-                  accentColor={colors.danger}
-                  style={styles.scoreCard}
-                />
               )}
             </>
           ) : (
             <>
               <Text style={styles.headline}>
-                {gauntlet.active ? (gauntlet.stage === 3 ? 'GAUNTLET COMPLETE' : `STAGE ${gauntlet.stage} CLEARED`) : (mode === 'reverse' ? (useGameStore.getState().bountyAmount ? 'BOUNTY CLAIMED' : 'CASE CLOSED') : 'CASE UNSOLVED')}
+                {gauntlet.active ? (gauntlet.stage === 3 ? 'GAUNTLET COMPLETE' : `STAGE ${gauntlet.stage} CLEARED`) : (isReverseFamily ? (useGameStore.getState().bountyAmount ? 'BOUNTY CLAIMED' : 'CASE CLOSED') : 'CASE UNSOLVED')}
               </Text>
               <Text style={styles.subheadline}>
-                {gauntlet.active ? 'You survived the interrogation!' : (mode === 'reverse' ? (useGameStore.getState().bountyAmount ? `You earned ${useGameStore.getState().bountyAmount} IC` : 'You Guessed the Secret Subject!') : 'You Outsmarted the AI')}
+                {gauntlet.active ? 'You survived the interrogation!' : (isReverseFamily ? (useGameStore.getState().bountyAmount ? `You earned ${useGameStore.getState().bountyAmount} IC` : 'You Guessed the Secret Subject!') : 'You Outsmarted the AI')}
               </Text>
 
               <View style={styles.statsRow}>
                 <StatCard
                   label="Questions Used"
-                  value={`${mode === 'reverse' ? questionNumber : maxQuestions} / ${maxQuestions}`}
+                  value={`${isReverseFamily ? questionNumber : maxQuestions} / ${maxQuestions}`}
                   icon="help-circle-outline"
                   accentColor={colors.warning}
                 />
               </View>
 
-              {mode !== 'reverse' && !gauntlet.active ? (
+              {!isReverseFamily && !gauntlet.active ? (
                 <GlassCard style={styles.inputCard}>
                   <Text style={typography.eyebrow}>What were you thinking of?</Text>
                   {submitted ? (
@@ -267,7 +270,7 @@ export default function ResultScreen() {
                     </>
                   )}
                 </GlassCard>
-              ) : (mode === 'reverse' && (
+              ) : (isReverseFamily && (
                 <StatCard
                   label="Secret Subject"
                   value={guess?.name || 'Unknown'}

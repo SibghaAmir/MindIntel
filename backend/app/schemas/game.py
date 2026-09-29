@@ -29,6 +29,7 @@ class GameState(BaseModel):
     pending_desperation_clue: Optional[str] = None
     transcript: Optional[str] = None
     decoy_entity: Optional[str] = None
+    syndicate_agents: List[str] = Field(default_factory=list)
 
 class CreateGameRequest(BaseModel):
     category: str
@@ -52,3 +53,7 @@ class RetconRequest(BaseModel):
 class DecoyGuessRequest(BaseModel):
     target: str
     decoy: str
+
+class SyndicateAskRequest(BaseModel):
+    question: str
+    agent: str

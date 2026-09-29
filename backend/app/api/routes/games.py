@@ -139,3 +139,11 @@ def submit_decoy_guess(game_id: UUID, request: DecoyGuessRequest):
     if not game:
         raise HTTPException(status_code=404, detail="Game not found or not in decoy mode")
     return game
+
+@router.post("/{game_id}/syndicate-ask", response_model=GameState)
+def submit_syndicate_ask(game_id: UUID, request: SyndicateAskRequest):
+    from app.services.game_service import process_syndicate_ask
+    game = process_syndicate_ask(game_id, request.dict())
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return game

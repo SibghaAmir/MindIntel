@@ -9,6 +9,7 @@ interface BackendGameState {
   max_questions: number;
   questions: string[];
   answers: string[];
+  syndicate_agents: string[];
   status: string;
   confidence: number;
   candidates: string[];
@@ -26,6 +27,7 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
   const answers: QAEntry[] = backend.questions.slice(0, backend.answers.length).map((q, i) => ({
     question: q,
     answer: backend.answers[i] as any,
+    agent: backend.syndicate_agents && backend.syndicate_agents[i] ? backend.syndicate_agents[i] : undefined,
   }));
 
   // Create a mock snapshot based on backend confidence
@@ -67,6 +69,7 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
     contradiction: backend.contradiction,
     isDaily: backend.is_daily,
     personality: backend.personality,
+    syndicateAgents: backend.syndicate_agents,
   };
 };
 
@@ -135,6 +138,14 @@ export const gameApi = {
     const data = await fetchApi<BackendGameState>(`/games/${gameId}/decoy-guess`, {
       method: 'POST',
       body: JSON.stringify({ target, decoy }),
+    });
+    return mapBackendStateToFrontend(data);
+  },
+
+  askSyndicate: async (gameId: string, question: string, agent: string): Promise<GameState> => {
+    const data = await fetchApi<BackendGameState>(`/games/${gameId}/syndicate-ask`, {
+      method: 'POST',
+      body: JSON.stringify({ question, agent }),
     });
     return mapBackendStateToFrontend(data);
   },

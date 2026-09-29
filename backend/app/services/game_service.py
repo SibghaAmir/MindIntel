@@ -15,12 +15,12 @@ def extract_game_state(graph_state: dict) -> GameState:
 
 def get_graph_for_game(game_id: UUID) -> object:
     game = games_db.get(game_id)
-    if game and game.mode in ["reverse", "deception", "decoy"]:
+    if game and game.mode in ["reverse", "deception", "decoy", "syndicate"]:
         return reverse_graph
     return app_graph
 
 def get_graph_for_mode(mode: str) -> object:
-    if mode in ["reverse", "deception", "decoy"]:
+    if mode in ["reverse", "deception", "decoy", "syndicate"]:
         return reverse_graph
     return app_graph
 
@@ -35,7 +35,7 @@ def create_game(request: CreateGameRequest) -> GameState:
     
     target_entity = None
     decoy_entity = None
-    if request.mode in ["reverse", "deception", "decoy"]:
+    if request.mode in ["reverse", "deception", "decoy", "syndicate"]:
         import random
         from app.ai.kb.data import SAMPLE_ENTITIES
         if request.subject:
@@ -75,7 +75,9 @@ def create_game(request: CreateGameRequest) -> GameState:
         "lie_caught": False,
         "fact_checks": 1 if request.mode == "deception" else 0,
         "pending_answer": None,
-        "pending_confirmation": None
+        "pending_agent": None,
+        "pending_confirmation": None,
+        "syndicate_agents": []
     }
     
     config = {"configurable": {"thread_id": str(game_id)}}
@@ -273,5 +275,22 @@ def process_decoy_guess(game_id: UUID, request: DecoyGuessRequest) -> Optional[G
         game.status = "lost"
         game.guess = request.target
         
+    games_db[game_id] = game
+    return game
+
+def process_syndicate_ask(game_id: UUID, request_data: dict) -> Optional[GameState]:
+    if game_id not in games_db:
+        return None
+        
+    config = {"configurable": {"thread_id": str(game_id)}}
+    graph = get_graph_for_game(game_id)
+    
+    graph.update_state(config, {
+        "pending_answer": request_data["question"],
+        "pending_agent": request_data["agent"]
+    })
+    result = graph.invoke(None, config)
+    
+    game = extract_game_state(result)
     games_db[game_id] = game
     return game

@@ -57,6 +57,8 @@ interface GameStore extends GameState {
   startDeadDropGame: (subject: string, category: string, bounty: number) => Promise<void>;
   startDecoyMode: () => Promise<void>;
   submitDecoyGuess: (target: string, decoy: string) => Promise<void>;
+  startSyndicateMode: () => Promise<void>;
+  askSyndicate: (question: string, agent: string) => Promise<void>;
 }
 
 let caseCounter = 26;
@@ -282,6 +284,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
+  startSyndicateMode: async () => {
+    caseCounter += 1;
+    useSettingsStore.getState().setTimeAttack(false); // No time attack
+    
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } });
+
+    try {
+      const newState = await gameApi.createGame('anything', 'syndicate', 'normal', useSettingsStore.getState().personality);
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      const updatedBoard = newPossibilities.slice(0, 9).map((p, i) => ({
+        id: `suspect-init-${i}-${p}`,
+        name: p,
+        status: 'active' as const
+      }));
+
+      set({
+        ...newState,
+        caseNumber: caseCounter,
+        isAnalyzing: false,
+        evidenceBoard: updatedBoard,
+        factChecksRemaining: 0,
+      });
+    } catch (error: any) {
+      set({
+        apiError: error.message || 'Failed to start syndicate mode.',
+        isAnalyzing: false,
+      });
+    }
+  },
+
   startDeadDropGame: async (subject: string, category: string, bounty: number) => {
     caseCounter += 1;
     useSettingsStore.getState().setTimeAttack(false);
@@ -415,6 +447,35 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch (error: any) {
       audioManager.stopThinking();
       set({ apiError: error.message || 'Failed to submit answer.', isAnalyzing: false, status: 'playing' });
+    }
+  },
+
+  askSyndicate: async (question: string, agent: string) => {
+    const state = get();
+    if (state.status !== 'playing' || !state.gameId) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    audioManager.playBlip();
+
+    const nextAnswers = [
+      ...state.answers,
+      { question, answer: '...', agent },
+    ];
+    set({ status: 'thinking', answers: nextAnswers as any, isAnalyzing: true, apiError: null });
+    audioManager.startThinking();
+
+    try {
+      const newState = await gameApi.askSyndicate(state.gameId, question, agent);
+      if (get().gameId !== state.gameId) {
+        audioManager.stopThinking();
+        return;
+      }
+
+      audioManager.stopThinking();
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false });
+    } catch (error: any) {
+      audioManager.stopThinking();
+      set({ apiError: error.message || 'Failed to ask syndicate.', isAnalyzing: false, status: 'playing' });
     }
   },
 

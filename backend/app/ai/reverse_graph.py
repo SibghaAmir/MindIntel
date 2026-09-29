@@ -15,6 +15,7 @@ class GraphState(TypedDict):
     max_questions: int
     questions: List[str]
     answers: List[str]
+    syndicate_agents: List[str]
     status: str
     confidence: int
     candidates: List[str]
@@ -27,6 +28,7 @@ class GraphState(TypedDict):
     lie_index: Optional[int]
     
     pending_answer: Optional[str]
+    pending_agent: Optional[str]
     pending_confirmation: Optional[bool]
     force_guess: Optional[bool]
 
@@ -50,7 +52,8 @@ def evaluate_question(state: GraphState) -> dict:
     
     target = state.get("target_entity")
     decoy = state.get("decoy_entity")
-    ans = evaluate_player_question(target, question, decoy)
+    agent = state.get("pending_agent")
+    ans = evaluate_player_question(target, question, decoy, agent)
     
     # Deception mechanic
     mode = state.get("mode", "reverse")
@@ -70,6 +73,7 @@ def evaluate_question(state: GraphState) -> dict:
     # ans is 'yes', 'no', 'maybe', 'guess_correct', 'guess_incorrect'
     questions = list(state.get("questions", [])) + [question]
     answers = list(state.get("answers", [])) + [ans]
+    syndicate_agents = list(state.get("syndicate_agents", [])) + [agent if agent else ""]
     
     status = "playing"
     if ans == "guess_correct":
@@ -80,8 +84,10 @@ def evaluate_question(state: GraphState) -> dict:
     return {
         "questions": questions,
         "answers": answers,
+        "syndicate_agents": syndicate_agents,
         "question_number": state.get("question_number", 0) + 1,
         "pending_answer": None,
+        "pending_agent": None,
         "status": status,
         "guess": target if status != "playing" else None,
         "has_lied": has_lied,

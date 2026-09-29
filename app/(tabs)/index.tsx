@@ -60,6 +60,15 @@ export default function HomeScreen() {
               style={styles.secondaryGap}
             />
             <SecondaryButton
+              label="THE SYNDICATE"
+              icon="people-outline"
+              onPress={() => {
+                useGameStore.getState().startSyndicateMode();
+                router.push('/investigation');
+              }}
+              style={styles.secondaryGap}
+            />
+            <SecondaryButton
               label="THE DECOY PROTOCOL"
               icon="git-network-outline"
               onPress={() => {

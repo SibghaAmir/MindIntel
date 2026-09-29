@@ -5,7 +5,7 @@ export type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 export type CaseCategoryId = string;
 
-export type InvestigationMode = 'standard' | 'rapid' | 'reverse' | 'deception' | 'decoy';
+export type InvestigationMode = 'standard' | 'rapid' | 'reverse' | 'deception' | 'decoy' | 'syndicate';
 
 export type AnswerValue = 'yes' | 'no' | 'maybe' | 'unknown' | string;
 
@@ -29,6 +29,7 @@ export interface ModeOption {
 export interface QAEntry {
   question: string;
   answer: AnswerValue;
+  agent?: string;
 }
 
 export interface CandidateGuess {
@@ -76,6 +77,7 @@ export interface GameState {
   factChecksRemaining?: number;
   transcript?: string;
   personality?: string;
+  syndicateAgents?: string[];
 }
 
 export type CaseResultType = 'ai_victory' | 'player_victory';
