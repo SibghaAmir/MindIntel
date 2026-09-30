@@ -70,6 +70,7 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
     isDaily: backend.is_daily,
     personality: backend.personality,
     syndicateAgents: backend.syndicate_agents,
+    doppelgangerHistory: (backend as any).doppelganger_history || [],
   };
 };
 
@@ -146,6 +147,19 @@ export const gameApi = {
     const data = await fetchApi<BackendGameState>(`/games/${gameId}/syndicate-ask`, {
       method: 'POST',
       body: JSON.stringify({ question, agent }),
+    });
+    return mapBackendStateToFrontend(data);
+  },
+
+  doppelgangerTurn: async (
+    gameId: string, 
+    player_answer_to_ai: string, 
+    player_question_for_ai: string, 
+    player_is_guessing: boolean
+  ): Promise<GameState> => {
+    const data = await fetchApi<BackendGameState>(`/games/${gameId}/doppelganger-turn`, {
+      method: 'POST',
+      body: JSON.stringify({ player_answer_to_ai, player_question_for_ai, player_is_guessing }),
     });
     return mapBackendStateToFrontend(data);
   },

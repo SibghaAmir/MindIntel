@@ -106,12 +106,14 @@ export default function InvestigationScreen() {
     clearContradiction,
     evidenceBoard = [],
     polygraphActive,
+    doppelgangerHistory = [],
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
   const [blackMarketVisible, setBlackMarketVisible] = useState(false);
   const coreScale = useSharedValue(1);
   const [reverseInput, setReverseInput] = useState('');
+  const [doppelgangerAnswer, setDoppelgangerAnswer] = useState<AnswerValue | null>(null);
   const isThinking = isAnalyzing; // We use isAnalyzing for the loading state
 
   const isDangerZone = maxQuestions - questionNumber <= 3;
@@ -413,6 +415,79 @@ export default function InvestigationScreen() {
               </AnimatedPressable>
             </View>
           </GlassCard>
+        ) : mode === 'doppelganger' ? (
+          <View style={styles.reverseWrap}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+              <Text style={{ ...typography.caption, color: colors.electricViolet }}>DOPPELGÄNGER MATCH ACTIVE</Text>
+            </View>
+            
+            {doppelgangerHistory.map((turn, i) => (
+              <View key={i} style={[styles.reverseQARow, { borderColor: colors.electricViolet }]}>
+                <Text style={{ ...typography.micro, color: colors.textTertiary, marginBottom: 4 }}>TURN {turn.turn}</Text>
+                <Text style={styles.reverseQText}>YOU: {turn.player_q}</Text>
+                <Text style={[styles.reverseAText, { color: turn.ai_a === 'yes' ? colors.success : colors.danger, marginBottom: spacing.xs }]}>
+                  AI: {String(turn.ai_a).toUpperCase()}
+                </Text>
+                <Text style={styles.reverseQText}>AI: {turn.ai_q}</Text>
+                <Text style={[styles.reverseAText, { color: turn.player_a === 'yes' ? colors.success : colors.danger }]}>
+                  YOU: {String(turn.player_a).toUpperCase()}
+                </Text>
+              </View>
+            ))}
+
+            <QuestionCard question={currentQuestion} questionKey={questionNumber} />
+
+            <View style={styles.answerGrid}>
+              {ANSWER_LABELS.map((a) => (
+                <AnswerButton
+                  key={a.value}
+                  value={a.value}
+                  label={a.label}
+                  onPress={(val) => setDoppelgangerAnswer(val)}
+                  disabled={isThinking || !!contradiction}
+                  style={doppelgangerAnswer === a.value ? { borderColor: colors.glowBlue, borderWidth: 2 } : {}}
+                />
+              ))}
+            </View>
+
+            <View style={styles.reverseInputRow}>
+              <import_react_native.TextInput
+                style={[styles.reverseInput, { color: colors.textPrimary, borderColor: colors.borderStrong }]}
+                placeholder="Ask the AI a question..."
+                placeholderTextColor={colors.textTertiary}
+                value={reverseInput}
+                onChangeText={setReverseInput}
+                editable={!isThinking}
+              />
+              <AnimatedPressable
+                onPress={() => {
+                  if (reverseInput.trim() && doppelgangerAnswer) {
+                    useGameStore.getState().submitDoppelgangerTurn(doppelgangerAnswer, reverseInput.trim(), false);
+                    setReverseInput('');
+                    setDoppelgangerAnswer(null);
+                  }
+                }}
+                disabled={isThinking || !reverseInput.trim() || !doppelgangerAnswer}
+                style={[styles.reverseSendBtn, { backgroundColor: doppelgangerAnswer ? colors.glowBlue : colors.borderStrong }]}
+              >
+                <Ionicons name="send" size={18} color="#fff" />
+              </AnimatedPressable>
+            </View>
+
+            <SecondaryButton
+              label="GUESS AI'S SUBJECT"
+              icon="search"
+              onPress={() => {
+                if (reverseInput.trim() && doppelgangerAnswer) {
+                  useGameStore.getState().submitDoppelgangerTurn(doppelgangerAnswer, reverseInput.trim(), true);
+                  setReverseInput('');
+                  setDoppelgangerAnswer(null);
+                }
+              }}
+              disabled={isThinking || !reverseInput.trim() || !doppelgangerAnswer}
+              style={{ marginTop: spacing.md, borderColor: colors.electricViolet }}
+            />
+          </View>
         ) : (
           <>
             <QuestionCard question={currentQuestion} questionKey={questionNumber} />

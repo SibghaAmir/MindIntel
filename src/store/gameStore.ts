@@ -59,6 +59,8 @@ interface GameStore extends GameState {
   submitDecoyGuess: (target: string, decoy: string) => Promise<void>;
   startSyndicateMode: () => Promise<void>;
   askSyndicate: (question: string, agent: string) => Promise<void>;
+  startDoppelgangerMode: () => Promise<void>;
+  submitDoppelgangerTurn: (answerToAi: string, questionForAi: string, isGuess: boolean) => Promise<void>;
 }
 
 let caseCounter = 26;
@@ -476,6 +478,81 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch (error: any) {
       audioManager.stopThinking();
       set({ apiError: error.message || 'Failed to ask syndicate.', isAnalyzing: false, status: 'playing' });
+    }
+  },
+
+  startDoppelgangerMode: async () => {
+    caseCounter += 1;
+    useSettingsStore.getState().setTimeAttack(false); // No time attack
+    
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } });
+
+    try {
+      const newState = await gameApi.createGame('anything', 'doppelganger', 'normal', useSettingsStore.getState().personality);
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      const updatedBoard = newPossibilities.slice(0, 9).map((p, i) => ({
+        id: `suspect-init-${i}-${p}`,
+        name: p,
+        status: 'active' as const
+      }));
+
+      set({
+        ...newState,
+        caseNumber: caseCounter,
+        isAnalyzing: false,
+        evidenceBoard: updatedBoard,
+        factChecksRemaining: 0,
+      });
+    } catch (error: any) {
+      set({
+        apiError: error.message || 'Failed to start doppelganger mode.',
+        isAnalyzing: false,
+      });
+    }
+  },
+
+  submitDoppelgangerTurn: async (answerToAi: string, questionForAi: string, isGuess: boolean) => {
+    const state = get();
+    if (state.status !== 'playing' || !state.gameId) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    audioManager.playBlip();
+
+    set({ status: 'thinking', isAnalyzing: true, apiError: null });
+    audioManager.startThinking();
+
+    try {
+      const newState = await gameApi.doppelgangerTurn(state.gameId, answerToAi, questionForAi, isGuess);
+      if (get().gameId !== state.gameId) {
+        audioManager.stopThinking();
+        return;
+      }
+
+      audioManager.stopThinking();
+      
+      const currentBoard = state.evidenceBoard || [];
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      let updatedBoard = [...currentBoard];
+      
+      updatedBoard = updatedBoard.map(item => {
+        if (item.status === 'active' && !newPossibilities.includes(item.name)) {
+          return { ...item, status: 'eliminated' };
+        }
+        return item;
+      });
+      
+      const maxSuspects = 9;
+      for (const p of newPossibilities) {
+        if (updatedBoard.length >= maxSuspects) break;
+        if (!updatedBoard.some(item => item.name === p)) {
+          updatedBoard.push({ id: `suspect-${Date.now()}-${p}`, name: p, status: 'active' });
+        }
+      }
+
+      set({ ...newState, caseNumber: state.caseNumber, isAnalyzing: false, evidenceBoard: updatedBoard });
+    } catch (error: any) {
+      audioManager.stopThinking();
+      set({ apiError: error.message || 'Failed to process doppelganger turn.', isAnalyzing: false, status: 'playing' });
     }
   },
 

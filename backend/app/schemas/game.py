@@ -30,6 +30,7 @@ class GameState(BaseModel):
     transcript: Optional[str] = None
     decoy_entity: Optional[str] = None
     syndicate_agents: List[str] = Field(default_factory=list)
+    doppelganger_history: List[dict] = Field(default_factory=list)
 
 class CreateGameRequest(BaseModel):
     category: str
@@ -57,3 +58,8 @@ class DecoyGuessRequest(BaseModel):
 class SyndicateAskRequest(BaseModel):
     question: str
     agent: str
+
+class DoppelgangerTurnRequest(BaseModel):
+    player_answer_to_ai: str
+    player_question_for_ai: str
+    player_is_guessing: bool = False

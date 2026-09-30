@@ -24,7 +24,7 @@ export default function ResultScreen() {
     useGameStore();
   const addCase = useCasesStore((s) => s.addCase);
 
-  const isReverseFamily = mode === 'reverse' || mode === 'deception' || mode === 'decoy' || mode === 'syndicate';
+  const isReverseFamily = mode === 'reverse' || mode === 'deception' || mode === 'decoy' || mode === 'syndicate' || mode === 'doppelganger';
   const isAiWin = isReverseFamily ? status === 'lost' : status === 'won';
   const playerWon = isReverseFamily ? status === 'won' : status === 'lost';
 

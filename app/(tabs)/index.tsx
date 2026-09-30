@@ -51,6 +51,15 @@ export default function HomeScreen() {
           <View style={styles.ctaGroup}>
             <PrimaryButton label="CREATE NEW CASE" icon="add-circle" onPress={handleNewCase} />
             <SecondaryButton
+              label="DOPPELGÄNGER MATCH"
+              icon="git-compare-outline"
+              onPress={() => {
+                useGameStore.getState().startDoppelgangerMode();
+                router.push('/investigation');
+              }}
+              style={styles.secondaryGap}
+            />
+            <SecondaryButton
               label="DAILY CIPHER"
               icon="calendar-outline"
               onPress={() => {

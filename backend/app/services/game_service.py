@@ -35,7 +35,7 @@ def create_game(request: CreateGameRequest) -> GameState:
     
     target_entity = None
     decoy_entity = None
-    if request.mode in ["reverse", "deception", "decoy", "syndicate"]:
+    if request.mode in ["reverse", "deception", "decoy", "syndicate", "doppelganger"]:
         import random
         from app.ai.kb.data import SAMPLE_ENTITIES
         if request.subject:
@@ -50,6 +50,12 @@ def create_game(request: CreateGameRequest) -> GameState:
                     decoy_entity = d
                     break
 
+    # For doppelganger, we also need to initialize candidates
+    init_candidates = []
+    if request.mode == "doppelganger" or request.mode not in ["reverse", "deception", "decoy", "syndicate"]:
+        from app.ai.candidate_service import get_initial_candidates
+        init_candidates = get_initial_candidates(request.category)
+
     initial_state = {
         "game_id": str(game_id),
         "category": request.category,
@@ -62,7 +68,7 @@ def create_game(request: CreateGameRequest) -> GameState:
         "confidence": 0,
         "questions": [],
         "answers": [],
-        "candidates": [],
+        "candidates": init_candidates,
         "current_question": None,
         "guess": None,
         "reason": None,
@@ -77,7 +83,8 @@ def create_game(request: CreateGameRequest) -> GameState:
         "pending_answer": None,
         "pending_agent": None,
         "pending_confirmation": None,
-        "syndicate_agents": []
+        "syndicate_agents": [],
+        "doppelganger_history": []
     }
     
     config = {"configurable": {"thread_id": str(game_id)}}
@@ -294,3 +301,46 @@ def process_syndicate_ask(game_id: UUID, request_data: dict) -> Optional[GameSta
     game = extract_game_state(result)
     games_db[game_id] = game
     return game
+
+from app.schemas.game import DoppelgangerTurnRequest
+from app.ai.reverse_chain import evaluate_player_question
+
+def process_doppelganger_turn(game_id: UUID, request: DoppelgangerTurnRequest) -> Optional[GameState]:
+    game = games_db.get(game_id)
+    if not game or game.mode != "doppelganger":
+        return None
+
+    # Evaluate player's question/guess against AI's target_entity
+    ai_answer_to_player = "no"
+    if request.player_is_guessing:
+        target_correct = request.player_question_for_ai.strip().lower() == game.target_entity.strip().lower()
+        if target_correct:
+            game.status = "won"
+            game.guess = request.player_question_for_ai
+            games_db[game_id] = game
+            return game
+        else:
+            ai_answer_to_player = "no"
+    else:
+        ai_answer_to_player = evaluate_player_question(game.target_entity, request.player_question_for_ai, None, None)
+
+    # Process Player's answer to AI's previous question
+    config = {"configurable": {"thread_id": str(game_id)}}
+    graph = get_graph_for_game(game_id)
+    
+    graph.update_state(config, {"pending_answer": request.player_answer_to_ai})
+    result = graph.invoke(None, config)
+    
+    new_game = extract_game_state(result)
+    
+    # Store turn history for the UI
+    new_game.doppelganger_history.append({
+        "turn": new_game.question_number,
+        "player_q": request.player_question_for_ai,
+        "ai_a": ai_answer_to_player,
+        "ai_q": new_game.current_question,
+        "player_a": request.player_answer_to_ai
+    })
+    
+    games_db[game_id] = new_game
+    return new_game

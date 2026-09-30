@@ -147,3 +147,12 @@ def submit_syndicate_ask(game_id: UUID, request: SyndicateAskRequest):
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
+
+from app.schemas.game import DoppelgangerTurnRequest
+@router.post("/{game_id}/doppelganger-turn", response_model=GameState)
+def submit_doppelganger_turn(game_id: UUID, request: DoppelgangerTurnRequest):
+    from app.services.game_service import process_doppelganger_turn
+    game = process_doppelganger_turn(game_id, request)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found or not in doppelganger mode")
+    return game
