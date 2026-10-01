@@ -60,6 +60,15 @@ export default function HomeScreen() {
               style={styles.secondaryGap}
             />
             <SecondaryButton
+              label="NEURAL DECAY"
+              icon="skull-outline"
+              onPress={() => {
+                useGameStore.getState().startDecayMode();
+                router.push('/investigation');
+              }}
+              style={styles.secondaryGap}
+            />
+            <SecondaryButton
               label="DAILY CIPHER"
               icon="calendar-outline"
               onPress={() => {

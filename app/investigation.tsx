@@ -490,6 +490,12 @@ export default function InvestigationScreen() {
           </View>
         ) : (
           <>
+            {mode === 'decay' && (
+              <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md, backgroundColor: 'rgba(255, 69, 58, 0.1)', paddingVertical: spacing.xs, borderRadius: 8 }}>
+                <Ionicons name="skull-outline" size={16} color={colors.danger} style={{ marginRight: spacing.xs }} />
+                <Text style={{ ...typography.caption, color: colors.danger, textAlign: 'center' }}>NEURAL DECAY PROTOCOL ACTIVE</Text>
+              </View>
+            )}
             <QuestionCard question={currentQuestion} questionKey={questionNumber} />
 
             {hint && (

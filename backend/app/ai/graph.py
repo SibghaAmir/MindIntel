@@ -101,10 +101,24 @@ def process_answer(state: GraphState) -> dict:
     
     questions = list(state.get("questions", [])) + [state.get("current_question")]
     answers = list(state.get("answers", [])) + [ans]
+    
+    question_number = state.get("question_number", 0) + 1
+    
+    # Neural Decay Logic
+    if state.get("mode") == "decay" and question_number > 0 and question_number % 4 == 0:
+        import random
+        # Find indices that are not yet corrupted
+        valid_indices = [i for i in range(len(questions)) if not questions[i].startswith("[CORRUPTED]")]
+        if len(valid_indices) >= 2:
+            to_corrupt = random.sample(valid_indices, 2)
+            for idx in to_corrupt:
+                questions[idx] = "[CORRUPTED] MEMORY SECTOR FAULT"
+                answers[idx] = "UNKNOWN"
+
     return {
         "questions": questions,
         "answers": answers,
-        "question_number": state.get("question_number", 0) + 1,
+        "question_number": question_number,
         "pending_answer": None
     }
 
