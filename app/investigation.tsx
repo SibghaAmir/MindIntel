@@ -107,6 +107,7 @@ export default function InvestigationScreen() {
     evidenceBoard = [],
     polygraphActive,
     doppelgangerHistory = [],
+    hivemindLogs = [],
   } = useGameStore();
 
   const [expanded, setExpanded] = useState(false);
@@ -494,6 +495,18 @@ export default function InvestigationScreen() {
               <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md, backgroundColor: 'rgba(255, 69, 58, 0.1)', paddingVertical: spacing.xs, borderRadius: 8 }}>
                 <Ionicons name="skull-outline" size={16} color={colors.danger} style={{ marginRight: spacing.xs }} />
                 <Text style={{ ...typography.caption, color: colors.danger, textAlign: 'center' }}>NEURAL DECAY PROTOCOL ACTIVE</Text>
+              </View>
+            )}
+            
+            {mode === 'hivemind' && hivemindLogs && hivemindLogs.length > 0 && (
+              <View style={{ marginBottom: spacing.md }}>
+                <Text style={{ ...typography.caption, color: colors.glowBlue, marginBottom: spacing.xs }}>SWARM DELIBERATION:</Text>
+                {hivemindLogs.map((log: any, idx: number) => (
+                  <View key={idx} style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: spacing.sm, borderRadius: 8, marginBottom: 4, borderLeftWidth: 2, borderLeftColor: colors.glowBlue }}>
+                    <Text style={{ ...typography.micro, color: colors.textSecondary, marginBottom: 2 }}>AGENT [{log.agent.toUpperCase()}]</Text>
+                    <Text style={{ ...typography.bodySmall, color: colors.textPrimary }}>{log.message}</Text>
+                  </View>
+                ))}
               </View>
             )}
             <QuestionCard question={currentQuestion} questionKey={questionNumber} />

@@ -5,7 +5,7 @@ export type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 export type CaseCategoryId = string;
 
-export type InvestigationMode = 'standard' | 'rapid' | 'reverse' | 'deception' | 'decoy' | 'syndicate' | 'doppelganger' | 'decay';
+export type InvestigationMode = 'standard' | 'rapid' | 'reverse' | 'deception' | 'decoy' | 'syndicate' | 'doppelganger' | 'decay' | 'hivemind';
 
 export type AnswerValue = 'yes' | 'no' | 'maybe' | 'unknown' | string;
 
@@ -79,6 +79,7 @@ export interface GameState {
   personality?: string;
   syndicateAgents?: string[];
   doppelgangerHistory?: any[];
+  hivemindLogs?: any[];
 }
 
 export type CaseResultType = 'ai_victory' | 'player_victory';

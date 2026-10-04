@@ -60,6 +60,15 @@ export default function HomeScreen() {
               style={styles.secondaryGap}
             />
             <SecondaryButton
+              label="THE HIVEMIND"
+              icon="chatbubbles-outline"
+              onPress={() => {
+                useGameStore.getState().startHivemindMode();
+                router.push('/investigation');
+              }}
+              style={styles.secondaryGap}
+            />
+            <SecondaryButton
               label="NEURAL DECAY"
               icon="skull-outline"
               onPress={() => {

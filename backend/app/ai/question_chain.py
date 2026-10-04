@@ -13,7 +13,11 @@ def format_history(game: GameState) -> str:
         history_lines.append(f"Q: {q}\nA: {a}")
     return "\n".join(history_lines)
 
-def get_personality_prompt(personality: str) -> str:
+def get_personality_prompt(game: GameState) -> str:
+    if getattr(game, 'mode', '') == 'hivemind':
+        return "HIVEMIND MODE ACTIVE: You must act as a swarm of 3 distinct AI sub-agents (e.g., 'Clinical', 'Erratic', 'Paranoid'). They must deliberate on what to ask next. Output their internal dialogue in the `hivemind_logs` array. Then, they must reach a consensus on the final `question` to ask."
+    
+    personality = getattr(game, 'personality', 'analytical')
     if personality == "bad_cop":
         return "Your personality is a 'Bad Cop'. You treat this game like a high-stakes police interrogation. Your questions should be blunt, demanding, aggressive, and intense."
     elif personality == "noir":
@@ -34,7 +38,7 @@ def generate_next_question(game: GameState) -> QuestionResponse:
     
     history_text = format_history(game)
     candidates_text = ", ".join(game.candidates) if game.candidates else "No specific candidates identified yet."
-    personality_prompt = get_personality_prompt(getattr(game, 'personality', 'analytical'))
+    personality_prompt = get_personality_prompt(game)
     
     response = chain.invoke({
         "category": game.category,

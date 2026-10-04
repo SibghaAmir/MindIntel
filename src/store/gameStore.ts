@@ -62,6 +62,7 @@ interface GameStore extends GameState {
   startDoppelgangerMode: () => Promise<void>;
   submitDoppelgangerTurn: (answerToAi: string, questionForAi: string, isGuess: boolean) => Promise<void>;
   startDecayMode: () => Promise<void>;
+  startHivemindMode: () => Promise<void>;
 }
 
 let caseCounter = 26;
@@ -537,6 +538,36 @@ export const useGameStore = create<GameStore>((set, get) => ({
     } catch (error: any) {
       set({
         apiError: error.message || 'Failed to start decay mode.',
+        isAnalyzing: false,
+      });
+    }
+  },
+
+  startHivemindMode: async () => {
+    caseCounter += 1;
+    useSettingsStore.getState().setTimeAttack(false);
+    
+    set({ isAnalyzing: true, apiError: null, status: 'thinking', hint: null, hintUsed: false, isDaily: false, gauntlet: { active: false, stage: 1, cumulativeScore: 0 } });
+
+    try {
+      const newState = await gameApi.createGame('anything', 'hivemind', 'normal', useSettingsStore.getState().personality);
+      const newPossibilities = newState.snapshot.topPossibilities || [];
+      const updatedBoard = newPossibilities.slice(0, 9).map((p, i) => ({
+        id: `suspect-init-${i}-${p}`,
+        name: p,
+        status: 'active' as const
+      }));
+
+      set({
+        ...newState,
+        caseNumber: caseCounter,
+        isAnalyzing: false,
+        evidenceBoard: updatedBoard,
+        factChecksRemaining: 0,
+      });
+    } catch (error: any) {
+      set({
+        apiError: error.message || 'Failed to start hivemind mode.',
         isAnalyzing: false,
       });
     }

@@ -31,6 +31,7 @@ class GameState(BaseModel):
     decoy_entity: Optional[str] = None
     syndicate_agents: List[str] = Field(default_factory=list)
     doppelganger_history: List[dict] = Field(default_factory=list)
+    hivemind_logs: List[dict] = Field(default_factory=list)
 
 class CreateGameRequest(BaseModel):
     category: str

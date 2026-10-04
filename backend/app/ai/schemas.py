@@ -5,6 +5,7 @@ class QuestionResponse(BaseModel):
     action: str = Field(description="Must be 'question'")
     question: str = Field(description="The question to ask the user")
     confidence: int = Field(description="Confidence percentage (0-100) that you know the target")
+    hivemind_logs: List[dict] = Field(default_factory=list, description="For Hivemind mode: A list of 3 objects representing the internal deliberation. Each object must have 'agent' (string) and 'message' (string). Empty if not in Hivemind mode.")
 
 class GuessResponse(BaseModel):
     action: str = Field(description="Must be 'guess'")

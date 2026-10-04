@@ -27,6 +27,7 @@ class GraphState(TypedDict):
     reason: Optional[str]
     contradiction: Optional[str]
     is_daily: Optional[bool]
+    hivemind_logs: Optional[List[dict]]
     
     pending_answer: Optional[str]
     pending_confirmation: Optional[bool]
@@ -76,7 +77,8 @@ def generate_question(state: GraphState) -> dict:
         "current_question": resp.question,
         "confidence": resp.confidence,
         "status": "playing",
-        "contradiction": None # Clear contradiction on new question
+        "contradiction": None, # Clear contradiction on new question
+        "hivemind_logs": resp.hivemind_logs
     }
 
 def generate_guess(state: GraphState) -> dict:
