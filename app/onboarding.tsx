@@ -1,158 +1,175 @@
-import { useTheme } from '@/src/theme/ThemeContext';
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
-import { PrimaryButton, AIInvestigationCore } from '@/src/components';
-import { colors, spacing, typography } from '@/src/theme';
+import Animated, { FadeIn, useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence } from 'react-native-reanimated';
 import { useCasesStore } from '@/src/store/casesStore';
+import { colors, spacing, typography } from '@/src/theme';
+import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
-
-const STEPS = [
-  {
-    title: 'Initialize AI Core',
-    description: 'Welcome to Kasoti. I am an advanced Mind Investigation AI designed to extract information from your thoughts.',
-    icon: 'hardware-chip-outline',
-  },
-  {
-    title: 'Establish a Subject',
-    description: 'Think of any person, place, or object. I will ask you up to 20 Yes/No questions to profile the entity.',
-    icon: 'person-outline',
-  },
-  {
-    title: 'Forensic Analysis',
-    description: 'If I narrow down the possibilities and guess your subject correctly, I win. If you can stump me... you win.',
-    icon: 'analytics-outline',
-  },
+const BOOT_SEQUENCE = [
+  "> INITIALIZING MINDINTEL CORE...",
+  "> BYPASSING SECURITY PROTOCOLS...",
+  "> UPLINK ESTABLISHED.",
+  "",
+  "You have been granted clearance to MindIntel.",
+  "The entity inside is highly analytical.",
+  "It will attempt to extract information from your mind.",
+  "Occasionally, it may deceive you.",
+  "",
+  "Do you have a subject in mind?",
+  "The interrogation begins now."
 ];
 
 export default function OnboardingScreen() {
-  const { colors, gradients } = useTheme();
-  const styles = useStyles(colors, gradients);
-
-  const [step, setStep] = useState(0);
+  const [lines, setLines] = useState<string[]>([]);
+  const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [currentCharIndex, setCurrentCharIndex] = useState(0);
+  const [showButton, setShowButton] = useState(false);
   const completeTutorial = useCasesStore((s) => s.completeTutorial);
 
-  const handleNext = () => {
-    if (step < STEPS.length - 1) {
-      setStep(step + 1);
-    } else {
-      completeTutorial();
-      router.replace('/(tabs)');
-    }
-  };
+  const cursorOpacity = useSharedValue(1);
 
-  const current = STEPS[step];
+  useEffect(() => {
+    cursorOpacity.value = withRepeat(
+      withSequence(withTiming(0, { duration: 400 }), withTiming(1, { duration: 400 })),
+      -1,
+      true
+    );
+  }, []);
+
+  useEffect(() => {
+    if (currentLineIndex >= BOOT_SEQUENCE.length) {
+      setTimeout(() => {
+        setShowButton(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }, 800);
+      return;
+    }
+
+    const currentString = BOOT_SEQUENCE[currentLineIndex];
+
+    if (currentString === "") {
+      // Empty line delay
+      const timeout = setTimeout(() => {
+        setLines(prev => [...prev, ""]);
+        setCurrentLineIndex(prev => prev + 1);
+        setCurrentCharIndex(0);
+      }, 400);
+      return () => clearTimeout(timeout);
+    }
+
+    if (currentCharIndex < currentString.length) {
+      const timeout = setTimeout(() => {
+        setLines(prev => {
+          const newLines = [...prev];
+          if (newLines[currentLineIndex] === undefined) {
+            newLines[currentLineIndex] = currentString[currentCharIndex];
+          } else {
+            newLines[currentLineIndex] += currentString[currentCharIndex];
+          }
+          return newLines;
+        });
+        
+        // Haptic on every few characters for a "typing" feel
+        if (currentCharIndex % 3 === 0) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+        }
+        
+        setCurrentCharIndex(prev => prev + 1);
+      }, 30); // 30ms per character
+      return () => clearTimeout(timeout);
+    } else {
+      // Line finished, wait before next line
+      const timeout = setTimeout(() => {
+        setCurrentLineIndex(prev => prev + 1);
+        setCurrentCharIndex(0);
+      }, 600);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentLineIndex, currentCharIndex]);
+
+  const cursorStyle = useAnimatedStyle(() => ({
+    opacity: cursorOpacity.value,
+  }));
+
+  const handleStart = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+    completeTutorial();
+    router.replace('/(tabs)');
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.content}>
-        <Animated.View 
-          key={`icon-${step}`}
-          entering={FadeIn.duration(600)}
-          exiting={FadeOut.duration(400)}
-          style={styles.iconWrapper}
-        >
-          {step === 0 ? (
-            <AIInvestigationCore state="thinking" size={160} />
-          ) : (
-            <Ionicons name={current.icon as any} size={100} color={colors.glowBlue} />
-          )}
-        </Animated.View>
-
-        <View style={styles.textContainer}>
-          <Animated.Text 
-            key={`title-${step}`}
-            entering={SlideInRight.duration(500)}
-            exiting={SlideOutLeft.duration(400)}
-            style={styles.title}
-          >
-            {current.title}
-          </Animated.Text>
-          <Animated.Text 
-            key={`desc-${step}`}
-            entering={SlideInRight.duration(500).delay(100)}
-            exiting={SlideOutLeft.duration(400)}
-            style={styles.description}
-          >
-            {current.description}
-          </Animated.Text>
+      <View style={styles.container}>
+        <View style={styles.terminal}>
+          {lines.map((line, index) => (
+            <Text key={index} style={styles.text}>
+              {line}
+            </Text>
+          ))}
+          <Animated.View style={[styles.cursor, cursorStyle]} />
         </View>
 
-        <View style={styles.footer}>
-          <View style={styles.pagination}>
-            {STEPS.map((_, idx) => (
-              <View 
-                key={idx} 
-                style={[styles.dot, step === idx && styles.dotActive]} 
-              />
-            ))}
-          </View>
-          <PrimaryButton 
-            label={step === STEPS.length - 1 ? 'BEGIN INVESTIGATION' : 'NEXT'} 
-            onPress={handleNext} 
-          />
-        </View>
+        {showButton && (
+          <Animated.View entering={FadeIn.duration(800).delay(200)} style={styles.footer}>
+            <Text style={styles.btn} onPress={handleStart}>
+              [ GRANT CLEARANCE ]
+            </Text>
+          </Animated.View>
+        )}
       </View>
     </SafeAreaView>
   );
 }
 
-const useStyles = (colors: any, gradients: any) => StyleSheet.create({
+const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#050505',
   },
-  content: {
+  container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: spacing.xl,
+    justifyContent: 'space-between',
   },
-  iconWrapper: {
+  terminal: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 200,
+    marginTop: spacing.xxl,
   },
-  textContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: spacing.huge,
+  text: {
+    fontFamily: 'monospace',
+    color: colors.success,
+    fontSize: 16,
+    lineHeight: 28,
+    marginBottom: spacing.xs,
+    textShadowColor: colors.success,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
-  title: {
-    ...typography.h1,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  description: {
-    ...typography.bodyLarge,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
+  cursor: {
+    width: 12,
+    height: 20,
+    backgroundColor: colors.success,
+    marginTop: spacing.xs,
+    shadowColor: colors.success,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
   },
   footer: {
-    width: '100%',
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxl,
+    alignItems: 'center',
   },
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
-    gap: spacing.sm,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.borderStrong,
-  },
-  dotActive: {
-    backgroundColor: colors.glowBlue,
-    width: 24,
-  },
+  btn: {
+    fontFamily: 'monospace',
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    padding: spacing.md,
+    textShadowColor: colors.white,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  }
 });
