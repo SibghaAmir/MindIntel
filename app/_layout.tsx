@@ -6,7 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '@/src/theme';
 import { ThemeProvider } from '@/src/theme/ThemeContext';
-import { AchievementToast } from '@/src/components';
+import { AchievementToast, OfflineOverlay } from '@/src/components';
 import { audioManager } from '@/src/services/audioManager';
 import { useSettingsStore } from '@/src/store/settingsStore';
 
@@ -37,6 +37,7 @@ export default function RootLayout() {
             <Stack.Screen name="how-to-play" options={{ presentation: 'modal' }} />
           </Stack>
           <AchievementToast />
+          <OfflineOverlay />
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </ThemeProvider>

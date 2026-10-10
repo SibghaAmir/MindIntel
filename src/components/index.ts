@@ -21,3 +21,4 @@ export { TimeAttackBar } from './TimeAttackBar';
 export { SuspectCard } from './SuspectCard';
 export { BlackMarketModal } from './BlackMarketModal';
 export { HeartbeatMonitor } from './HeartbeatMonitor';
+export { OfflineOverlay } from './OfflineOverlay';
