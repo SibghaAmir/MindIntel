@@ -28,6 +28,7 @@ class GraphState(TypedDict):
     contradiction: Optional[str]
     is_daily: Optional[bool]
     hivemind_logs: Optional[List[dict]]
+    winner: Optional[str]
     
     pending_answer: Optional[str]
     pending_confirmation: Optional[bool]
@@ -146,8 +147,10 @@ def process_confirmation(state: GraphState) -> dict:
         return {}
         
     status = "won" if correct else "lost"
+    winner = "ai" if correct else "player"
     return {
         "status": status,
+        "winner": winner,
         "pending_confirmation": None
     }
 

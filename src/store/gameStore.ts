@@ -92,6 +92,7 @@ function initialState(): GameState {
     factChecksRemaining: 0,
     polygraphActive: false,
     retconActive: false,
+    winner: undefined,
   };
 }
 

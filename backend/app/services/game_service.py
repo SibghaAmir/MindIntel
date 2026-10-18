@@ -184,6 +184,10 @@ def process_guess_confirmation(game_id: UUID, request: ConfirmGuessRequest) -> O
     result = graph.invoke(None, config)
     
     game = extract_game_state(result)
+    if game.status == "won":
+        game.winner = "ai"
+    elif game.status == "lost":
+        game.winner = "player"
     games_db[game_id] = game
     return game
 
@@ -316,6 +320,7 @@ def process_doppelganger_turn(game_id: UUID, request: DoppelgangerTurnRequest) -
         target_correct = request.player_question_for_ai.strip().lower() == game.target_entity.strip().lower()
         if target_correct:
             game.status = "won"
+            game.winner = "player"
             game.guess = request.player_question_for_ai
             games_db[game_id] = game
             return game

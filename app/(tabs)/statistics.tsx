@@ -2,7 +2,7 @@ import { useTheme } from '@/src/theme/ThemeContext';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { GlassCard, StatCard, SectionHeader, ConfidenceBar } from '@/src/components';
+import { GlassCard, StatCard, SectionHeader, ConfidenceBar, SecondaryButton } from '@/src/components';
 import { colors, spacing, typography } from '@/src/theme';
 import { useCasesStore } from '@/src/store/casesStore';
 

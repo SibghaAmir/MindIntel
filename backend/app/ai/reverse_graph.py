@@ -24,6 +24,7 @@ class GraphState(TypedDict):
     reason: Optional[str]
     target_entity: Optional[str]
     decoy_entity: Optional[str]
+    winner: Optional[str]
     has_lied: Optional[bool]
     lie_index: Optional[int]
     
@@ -76,10 +77,13 @@ def evaluate_question(state: GraphState) -> dict:
     syndicate_agents = list(state.get("syndicate_agents", [])) + [agent if agent else ""]
     
     status = "playing"
+    winner = None
     if ans == "guess_correct":
         status = "won"
+        winner = "player"
     elif state["question_number"] + 1 >= state["max_questions"]:
         status = "lost"
+        winner = "ai"
         
     return {
         "questions": questions,
@@ -89,6 +93,7 @@ def evaluate_question(state: GraphState) -> dict:
         "pending_answer": None,
         "pending_agent": None,
         "status": status,
+        "winner": winner,
         "guess": target if status != "playing" else None,
         "has_lied": has_lied,
         "lie_index": lie_index

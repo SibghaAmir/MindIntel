@@ -32,6 +32,7 @@ class GameState(BaseModel):
     syndicate_agents: List[str] = Field(default_factory=list)
     doppelganger_history: List[dict] = Field(default_factory=list)
     hivemind_logs: List[dict] = Field(default_factory=list)
+    winner: Optional[str] = None  # 'player', 'ai', or None
 
 class CreateGameRequest(BaseModel):
     category: str

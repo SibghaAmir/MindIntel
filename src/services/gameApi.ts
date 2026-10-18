@@ -72,6 +72,7 @@ const mapBackendStateToFrontend = (backend: BackendGameState): GameState => {
     syndicateAgents: backend.syndicate_agents,
     doppelgangerHistory: (backend as any).doppelganger_history || [],
     hivemindLogs: (backend as any).hivemind_logs || [],
+    winner: (backend as any).winner || undefined,
   };
 };
 

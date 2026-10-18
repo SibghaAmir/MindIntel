@@ -24,9 +24,27 @@ export default function ResultScreen() {
     useGameStore();
   const addCase = useCasesStore((s) => s.addCase);
 
-  const isReverseFamily = mode === 'reverse' || mode === 'deception' || mode === 'decoy' || mode === 'syndicate' || mode === 'doppelganger';
-  const isAiWin = isReverseFamily ? status === 'lost' : status === 'won';
-  const playerWon = isReverseFamily ? status === 'won' : status === 'lost';
+  const winner = useGameStore((s) => s.winner);
+
+  const isReverseFamily = mode === 'reverse' || mode === 'deception' || mode === 'decoy' || mode === 'syndicate';
+
+  let playerWon = false;
+  let isAiWin = false;
+
+  if (winner) {
+    playerWon = winner === 'player';
+    isAiWin = winner === 'ai';
+  } else if (mode === 'doppelganger') {
+    // If the player successfully guessed AI's entity (guess has no AI reason attached)
+    playerWon = status === 'won' && !guess?.reason;
+    isAiWin = !playerWon;
+  } else if (isReverseFamily) {
+    playerWon = status === 'won';
+    isAiWin = status === 'lost';
+  } else {
+    isAiWin = status === 'won';
+    playerWon = status === 'lost';
+  }
 
   const [subjectInput, setSubjectInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -152,6 +170,10 @@ export default function ResultScreen() {
         }).join('');
         const winStr = playerWon ? questionNumber : 'X';
         message = `Kasoti Daily Cipher (${dateStr})\n${winStr}/${maxQuestions}\n\n${grid}\n\nCan you crack the cipher?`;
+      } else if (mode === 'doppelganger') {
+        message = isAiWin
+          ? `I just faced Kasoti in a Doppelgänger Match! The AI deduced my mind before I could breach its target ('${guess?.name}')!`
+          : `I just won a Doppelgänger Match in Kasoti! I deduced the AI's secret ('${guess?.name}') before it could deduce mine!`;
       } else if (isReverseFamily) {
         message = isAiWin
           ? `I just played Reverse Kasoti! The AI stumped me with '${guess?.name}' after ${maxQuestions} questions! Can you beat it?`

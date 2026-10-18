@@ -80,6 +80,7 @@ export interface GameState {
   syndicateAgents?: string[];
   doppelgangerHistory?: any[];
   hivemindLogs?: any[];
+  winner?: 'player' | 'ai';
 }
 
 export type CaseResultType = 'ai_victory' | 'player_victory';
