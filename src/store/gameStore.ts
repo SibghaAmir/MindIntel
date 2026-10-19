@@ -190,7 +190,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         ...newState,
         caseNumber: caseCounter,
         isAnalyzing: false,
-        evidenceBoard: updatedBoard
+        evidenceBoard: updatedBoard,
+        factChecksRemaining: selectedMode === 'deception' ? 1 : 0,
       });
     } catch (error: any) {
       set({

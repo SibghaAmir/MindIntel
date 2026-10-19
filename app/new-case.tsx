@@ -106,8 +106,28 @@ export default function NewCaseScreen() {
               >
                 {selected && <View style={styles.radioInner} />}
               </View>
+              {mode.icon && (
+                <View style={styles.modeIconWrap}>
+                  <Ionicons
+                    name={mode.icon}
+                    size={22}
+                    color={selected ? colors.glowBlue : colors.textTertiary}
+                  />
+                </View>
+              )}
               <View style={styles.modeTextWrap}>
-                <Text style={styles.modeTitle}>{mode.title}</Text>
+                <View style={styles.modeTitleRow}>
+                  <Text style={[styles.modeTitle, selected && { color: colors.glowBlue, fontWeight: '700' }]}>
+                    {mode.title}
+                  </Text>
+                  {mode.badge && (
+                    <View style={[styles.badge, selected && styles.badgeSelected]}>
+                      <Text style={[styles.badgeText, selected && { color: colors.glowBlue }]}>
+                        {mode.badge}
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={styles.modeSubtitle}>{mode.subtitle}</Text>
               </View>
             </AnimatedPressable>
@@ -208,9 +228,37 @@ const useStyles = (colors: any, gradients: any) => StyleSheet.create({
     ...typography.bodyMedium,
     fontSize: 16,
   },
+  modeIconWrap: {
+    marginRight: spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modeTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  badge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  badgeSelected: {
+    backgroundColor: 'rgba(111, 168, 255, 0.15)',
+    borderColor: 'rgba(111, 168, 255, 0.4)',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: colors.textSecondary,
+  },
   modeSubtitle: {
     ...typography.caption,
-    marginTop: 2,
+    marginTop: 3,
   },
   footer: {
     paddingHorizontal: spacing.lg,

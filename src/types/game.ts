@@ -24,6 +24,8 @@ export interface ModeOption {
   title: string;
   subtitle: string;
   questionCount: number;
+  badge?: string;
+  icon?: IoniconName;
 }
 
 export interface QAEntry {
